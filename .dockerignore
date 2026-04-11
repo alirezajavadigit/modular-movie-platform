@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker files themselves (but NOT config files needed by the build)
+docker-compose*.yml
+Dockerfile
+docker/nginx/
+docker/.env*
+
+# Dependencies (installed inside container)
+vendor/
+node_modules/
+
+# Laravel generated / cache
+bootstrap/cache/*.php
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Tests
+tests/
+phpunit.xml
+.phpunit.cache/
+
+# Dev tooling
+.editorconfig
+.phpcs.xml
+phpstan.neon
+.php-cs-fixer.php
+_ide_helper*.php
+
+# Docs
+README.md
+CHANGELOG.md
+*.md
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files (injected at runtime)
+.env
+.env.*
