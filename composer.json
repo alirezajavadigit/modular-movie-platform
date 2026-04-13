@@ -11,12 +11,15 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^11.31",
+        "laravel/socialite": "^5.0",
         "laravel/tinker": "^2.9",
         "nwidart/laravel-modules": "^12.0",
         "php-open-source-saver/jwt-auth": "^2.8",
+        "spatie/laravel-fractal": "^6.4",
         "spatie/laravel-medialibrary": "^11.21",
         "spatie/laravel-permission": "^6.25",
         "spatie/laravel-translatable": "^6.11",
+        "tymon/jwt-auth": "^2.0",
         "wikimedia/composer-merge-plugin": "^2.1"
     },
     "require-dev": {
