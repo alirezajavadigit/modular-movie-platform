@@ -94,7 +94,7 @@ fresh:
 	$(APP) php artisan migrate:fresh --seed --no-interaction
 
 test:
-	$(APP) php artisan test --no-interaction
+	$(APP) php artisan test 
 
 test-filter:
 	$(APP) php artisan test --filter=$(f) --no-interaction
