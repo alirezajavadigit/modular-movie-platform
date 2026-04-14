@@ -3,6 +3,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+    image: movies_app
     container_name: movies_app
     restart: unless-stopped
     working_dir: /var/www/html
@@ -60,6 +61,7 @@ services:
       retries: 10
     networks:
       - movies_net
+
   redis:
     image: redis:7.2-alpine
     container_name: movies_redis
@@ -87,6 +89,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+    image: movies_app
     container_name: movies_queue
     restart: unless-stopped
     working_dir: /var/www/html
@@ -99,36 +102,31 @@ services:
     networks:
       - movies_net
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - app
+      - postgres
+      - redis
 
-  pgadmin:
-    image: dpage/pgadmin4:8
-    container_name: movies_pgadmin
+  adminer:
+    image: adminer:4
+    container_name: movies_adminer
     restart: unless-stopped
     ports:
-      - "5050:80"
+      - "5050:8080"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      ADMINER_DEFAULT_SERVER: movies_postgres
+      ADMINER_DESIGN: pepa-linha-dark
     networks:
       - movies_net
     depends_on:
-      - postgres
-    profiles:
-      - tools
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
     driver: local
   redis_data:
     driver: local
-  pgadmin_data:
-    driver: local
+
 networks:
   movies_net:
     driver: bridge
