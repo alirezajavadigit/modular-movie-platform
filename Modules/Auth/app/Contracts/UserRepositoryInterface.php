@@ -10,6 +10,8 @@ interface UserRepositoryInterface
 {
     public function findByEmail(string $email): ?User;
 
+    public function findById(int $id): ?User;
+
     public function findByPhone(string $phone): ?User;
 
     public function findByEmailOrPhone(string $identifier): ?User;
