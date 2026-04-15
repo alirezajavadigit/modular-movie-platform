@@ -1,0 +1,105 @@
+<?php
+
+namespace Modules\Movie\Http\Controllers;
+
+use App\Facades\ApiResponse;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Modules\Movie\Contracts\EpisodeServiceInterface;
+use Modules\Movie\DTOs\CreateEpisodeDTO;
+use Modules\Movie\DTOs\UpdateEpisodeDTO;
+use Modules\Movie\Http\Requests\StoreEpisodeRequest;
+use Modules\Movie\Http\Requests\UpdateEpisodeRequest;
+use Modules\Movie\Http\Resources\Transformers\EpisodeTransformer;
+
+class EpisodeController extends Controller
+{
+    public function __construct(
+        private readonly EpisodeServiceInterface $episodeService,
+    ) {}
+
+    public function index(int $movie): JsonResponse
+    {
+        $episodes = $this->episodeService->getAllEpisodes($movie);
+
+        return ApiResponse::fractal(
+            $episodes,
+            new EpisodeTransformer(),
+            __('movie::messages.episodes.index'),
+        );
+    }
+
+    public function store(StoreEpisodeRequest $request, int $movie): JsonResponse
+    {
+        $dto = new CreateEpisodeDTO(
+            movieId: $movie,
+            seasonNumber: (int) $request->validated('season_number'),
+            episodeNumber: (int) $request->validated('episode_number'),
+            title: $request->validated('title'),
+            description: $request->validated('description'),
+            poster: $request->validated('poster'),
+            trailerUrl: $request->validated('trailer_url'),
+            downloadLinks: $request->validated('download_links'),
+        );
+
+        $episode = $this->episodeService->createEpisode($dto);
+
+        return ApiResponse::fractalCreated(
+            $episode,
+            new EpisodeTransformer(),
+            __('movie::messages.episodes.store'),
+        );
+    }
+
+    public function show(int $movie, int $episode): JsonResponse
+    {
+        $episode = $this->episodeService->getEpisodeById($movie, $episode);
+
+        return ApiResponse::fractal(
+            $episode,
+            new EpisodeTransformer(),
+            __('movie::messages.episodes.show'),
+        );
+    }
+
+    public function update(UpdateEpisodeRequest $request, int $movie, int $episode): JsonResponse
+    {
+        $dto = new UpdateEpisodeDTO(
+            seasonNumber: (int) $request->validated('season_number'),
+            episodeNumber: (int) $request->validated('episode_number'),
+            title: $request->validated('title'),
+            description: $request->validated('description'),
+            poster: $request->validated('poster'),
+            trailerUrl: $request->validated('trailer_url'),
+            downloadLinks: $request->validated('download_links'),
+        );
+
+        $episode = $this->episodeService->updateEpisode($movie, $episode, $dto);
+
+        return ApiResponse::fractal(
+            $episode,
+            new EpisodeTransformer(),
+            __('movie::messages.episodes.update'),
+        );
+    }
+
+    public function destroy(int $movie, int $episode): JsonResponse
+    {
+        $this->episodeService->deleteEpisode($movie, $episode);
+
+        return ApiResponse::noContent(
+            __('movie::messages.episodes.destroy'),
+        );
+    }
+
+    public function restore(int $movie, int $episode): JsonResponse
+    {
+        $episode = $this->episodeService->restoreEpisode($movie, $episode);
+
+        return ApiResponse::fractal(
+            $episode,
+            new EpisodeTransformer(),
+            __('movie::messages.episodes.restore'),
+        );
+    }
+}

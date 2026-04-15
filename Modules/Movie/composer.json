@@ -1,0 +1,32 @@
+{
+    "name": "alirezajavadi/movie",
+    "description": "Movie management module with Movies, Serials, and Episodes",
+    "authors": [
+        {
+            "name": "Alireza Javadi",
+            "email": "alirezajavadigit@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "alirezajavadi/authorization": "*"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Movie\\": "app/",
+            "Modules\\Movie\\Database\\Factories\\": "database/factories/",
+            "Modules\\Movie\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Movie\\Tests\\": "tests/"
+        }
+    }
+}
