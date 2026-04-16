@@ -21,6 +21,7 @@ class StoreEpisodeRequest extends FormRequest
             'title'           => ['required', 'string', 'max:255'],
             'description'     => ['nullable', 'string'],
             'poster'          => ['nullable', 'string', 'max:2048'],
+            'poster_file'     => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
             'trailer_url'     => ['nullable', 'string', 'url', 'max:2048'],
             'download_links'  => ['nullable', 'array'],
             'download_links.*' => ['string', 'url', 'max:2048'],
