@@ -1,4 +1,6 @@
 {
     "Auth": true,
-    "Authorization": true
+    "Authorization": true,
+    "Movie": true,
+    "Article": true
 }
