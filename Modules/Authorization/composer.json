@@ -1,18 +1,21 @@
 {
     "name": "alirezajavadi/authorization",
-    "description": "",
+    "description": "Authorization module with roles and permissions",
     "authors": [
         {
             "name": "Alireza Javadi",
             "email": "alirezajavadigit@gmail.com"
         }
     ],
+    "require": {
+        "php": "^8.2",
+        "spatie/laravel-permission": "^6.25",
+        "alirezajavadi/auth": "*"
+    },
     "extra": {
         "laravel": {
             "providers": [],
-            "aliases": {
-
-            }
+            "aliases": {}
         }
     },
     "autoload": {
