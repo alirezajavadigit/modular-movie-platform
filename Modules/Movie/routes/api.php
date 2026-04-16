@@ -3,17 +3,33 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Movie\Http\Controllers\EpisodeController;
 use Modules\Movie\Http\Controllers\MovieController;
+use Modules\Movie\Http\Controllers\PublicEpisodeController;
+use Modules\Movie\Http\Controllers\PublicMovieController;
 
-Route::middleware(['auth:api', 'auto.authorize'])
-    ->prefix('api/v1')
+Route::prefix('api/v1')
     ->name('api.')
     ->group(function () {
 
-        Route::apiResource('movies', MovieController::class);
-        Route::post('movies/{movie}/restore', [MovieController::class, 'restore'])
-            ->name('movies.restore');
+        Route::name('public.')->group(function () {
+            Route::get('movies', [PublicMovieController::class, 'index'])
+                ->name('movies.index');
+            Route::get('movies/{movie}', [PublicMovieController::class, 'show'])
+                ->name('movies.show');
+            Route::get('movies/{movie}/episodes', [PublicEpisodeController::class, 'index'])
+                ->name('movies.episodes.index');
+            Route::get('movies/{movie}/episodes/{episode}', [PublicEpisodeController::class, 'show'])
+                ->name('movies.episodes.show');
+        });
 
-        Route::apiResource('movies.episodes', EpisodeController::class);
-        Route::post('movies/{movie}/episodes/{episode}/restore', [EpisodeController::class, 'restore'])
-            ->name('movies.episodes.restore');
+        Route::middleware(['auth:api', 'auto.authorize'])->group(function () {
+            Route::apiResource('movies', MovieController::class)
+                ->except(['index', 'show']);
+            Route::post('movies/{movie}/restore', [MovieController::class, 'restore'])
+                ->name('movies.restore');
+
+            Route::apiResource('movies.episodes', EpisodeController::class)
+                ->except(['index', 'show']);
+            Route::post('movies/{movie}/episodes/{episode}/restore', [EpisodeController::class, 'restore'])
+                ->name('movies.episodes.restore');
+        });
     });
