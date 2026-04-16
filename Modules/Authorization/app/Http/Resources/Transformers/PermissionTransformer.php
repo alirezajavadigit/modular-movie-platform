@@ -13,8 +13,8 @@ class PermissionTransformer extends TransformerAbstract
             'id' => $permission->id,
             'name' => $permission->name,
             'guard_name' => $permission->guard_name,
-            'created_at' => $permission->created_at->toISOString(),
-            'updated_at' => $permission->updated_at->toISOString(),
+            'created_at' => $permission->created_at?->toISOString(),
+            'updated_at' => $permission->updated_at?->toISOString(),
         ];
     }
 }

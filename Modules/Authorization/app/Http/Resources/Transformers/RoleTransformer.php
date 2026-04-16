@@ -17,8 +17,8 @@ class RoleTransformer extends TransformerAbstract
             'id' => $role->id,
             'name' => $role->name,
             'guard_name' => $role->guard_name,
-            'created_at' => $role->created_at->toISOString(),
-            'updated_at' => $role->updated_at->toISOString(),
+            'created_at' => $role->created_at?->toISOString(),
+            'updated_at' => $role->updated_at?->toISOString(),
         ];
     }
 
