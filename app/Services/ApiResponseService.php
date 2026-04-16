@@ -109,4 +109,15 @@ final class ApiResponseService
             'pagination' => $result['pagination'] ?? null,
         ], Response::HTTP_OK);
     }
+
+    public function fractalCollection(mixed $data, mixed $transformer, string $message = 'Operation successful'): JsonResponse
+    {
+        $transformed = fractal($data, $transformer)->toArray();
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data'    => $transformed['data'],
+        ], Response::HTTP_OK);
+    }
 }
