@@ -6,6 +6,7 @@ use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Modules\Movie\Contracts\EpisodeServiceInterface;
+use Modules\Movie\Contracts\FileUploadServiceInterface;
 use Modules\Movie\DTOs\CreateEpisodeDTO;
 use Modules\Movie\DTOs\UpdateEpisodeDTO;
 use Modules\Movie\Http\Requests\StoreEpisodeRequest;
@@ -16,6 +17,7 @@ class EpisodeController extends Controller
 {
     public function __construct(
         private readonly EpisodeServiceInterface $episodeService,
+        private readonly FileUploadServiceInterface $fileUploadService,
     ) {}
 
     public function index(int $movie): JsonResponse
@@ -31,13 +33,15 @@ class EpisodeController extends Controller
 
     public function store(StoreEpisodeRequest $request, int $movie): JsonResponse
     {
+        $poster = $this->resolvePoster($request);
+
         $dto = new CreateEpisodeDTO(
             movieId: $movie,
             seasonNumber: (int) $request->validated('season_number'),
             episodeNumber: (int) $request->validated('episode_number'),
             title: $request->validated('title'),
             description: $request->validated('description'),
-            poster: $request->validated('poster'),
+            poster: $poster,
             trailerUrl: $request->validated('trailer_url'),
             downloadLinks: $request->validated('download_links'),
         );
@@ -62,19 +66,26 @@ class EpisodeController extends Controller
         );
     }
 
-    public function update(UpdateEpisodeRequest $request, int $movie, int $episode): JsonResponse
+    public function update(UpdateEpisodeRequest $request, int $movie, int $episodeId): JsonResponse
     {
+        $episode = $this->episodeService->getEpisodeById($movie, $episodeId);
+        $poster = $this->resolvePoster($request);
+
+        if ($poster && $episode->poster && $poster !== $episode->poster) {
+            $this->fileUploadService->delete($episode->poster);
+        }
+
         $dto = new UpdateEpisodeDTO(
             seasonNumber: (int) $request->validated('season_number'),
             episodeNumber: (int) $request->validated('episode_number'),
             title: $request->validated('title'),
             description: $request->validated('description'),
-            poster: $request->validated('poster'),
+            poster: $poster ?? $episode->poster,
             trailerUrl: $request->validated('trailer_url'),
             downloadLinks: $request->validated('download_links'),
         );
 
-        $episode = $this->episodeService->updateEpisode($movie, $episode, $dto);
+        $episode = $this->episodeService->updateEpisode($movie, $episodeId, $dto);
 
         return ApiResponse::fractal(
             $episode,
@@ -101,5 +112,16 @@ class EpisodeController extends Controller
             new EpisodeTransformer(),
             __('movie::messages.episodes.restore'),
         );
+    }
+
+    private function resolvePoster(StoreEpisodeRequest|UpdateEpisodeRequest $request): ?string
+    {
+        if ($request->hasFile('poster_file')) {
+            $directory = config('movie.upload.directories.episode_posters');
+
+            return $this->fileUploadService->upload($request->file('poster_file'), $directory);
+        }
+
+        return $request->validated('poster');
     }
 }

@@ -5,6 +5,7 @@ namespace Modules\Movie\Http\Controllers;
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Modules\Movie\Contracts\FileUploadServiceInterface;
 use Modules\Movie\Contracts\MovieServiceInterface;
 use Modules\Movie\DTOs\CreateMovieDTO;
 use Modules\Movie\DTOs\UpdateMovieDTO;
@@ -18,6 +19,7 @@ class MovieController extends Controller
 {
     public function __construct(
         private readonly MovieServiceInterface $movieService,
+        private readonly FileUploadServiceInterface $fileUploadService,
     ) {}
 
     public function index(): JsonResponse
@@ -33,10 +35,12 @@ class MovieController extends Controller
 
     public function store(StoreMovieRequest $request): JsonResponse
     {
+        $poster = $this->resolvePoster($request);
+
         $dto = new CreateMovieDTO(
             title: $request->validated('title'),
             description: $request->validated('description'),
-            poster: $request->validated('poster'),
+            poster: $poster,
             trailerUrl: $request->validated('trailer_url'),
             downloadLinks: $request->validated('download_links'),
             releaseYear: (int) $request->validated('release_year'),
@@ -69,10 +73,17 @@ class MovieController extends Controller
 
     public function update(UpdateMovieRequest $request, int $id): JsonResponse
     {
+        $movie = $this->movieService->getMovieById($id);
+        $poster = $this->resolvePoster($request);
+
+        if ($poster && $movie->poster && $poster !== $movie->poster) {
+            $this->fileUploadService->delete($movie->poster);
+        }
+
         $dto = new UpdateMovieDTO(
             title: $request->validated('title'),
             description: $request->validated('description'),
-            poster: $request->validated('poster'),
+            poster: $poster ?? $movie->poster,
             trailerUrl: $request->validated('trailer_url'),
             downloadLinks: $request->validated('download_links'),
             releaseYear: (int) $request->validated('release_year'),
@@ -109,5 +120,16 @@ class MovieController extends Controller
             new MovieTransformer(),
             __('movie::messages.movies.restore'),
         );
+    }
+
+    private function resolvePoster(StoreMovieRequest|UpdateMovieRequest $request): ?string
+    {
+        if ($request->hasFile('poster_file')) {
+            $directory = config('movie.upload.directories.movie_posters');
+
+            return $this->fileUploadService->upload($request->file('poster_file'), $directory);
+        }
+
+        return $request->validated('poster');
     }
 }
