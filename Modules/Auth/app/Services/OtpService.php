@@ -2,6 +2,7 @@
 
 namespace Modules\Auth\Services;
 
+use InvalidArgumentException;
 use Modules\Auth\Contracts\OtpRepositoryInterface;
 use Modules\Auth\Contracts\OtpServiceInterface;
 use Modules\Auth\DTOs\OtpDTO;
@@ -10,18 +11,26 @@ use Modules\Auth\Models\User;
 
 class OtpService implements OtpServiceInterface
 {
+    private const array CHANNEL_MAP = [
+        'phone' => 'sms',
+        'sms' => 'sms',
+        'email' => 'email',
+    ];
+
     public function __construct(
         private readonly OtpRepositoryInterface $otpRepository,
     ) {}
 
     public function generate(User $user, string $channel): OtpDTO
     {
+        $normalizedChannel = $this->normalizeChannel($channel);
+
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $dto = new OtpDTO(
             userId: $user->id,
             code: $code,
-            channel: $channel,
+            channel: $normalizedChannel,
         );
 
         $expiresAt = now()->addMinutes(config('auth-module.otp_ttl', 5));
@@ -46,12 +55,27 @@ class OtpService implements OtpServiceInterface
 
     public function dispatch(User $user, string $channel): void
     {
-        $otpChannel = $channel === 'phone' ? 'sms' : $channel;
+        $normalizedChannel = $this->normalizeChannel($channel);
 
-        $otpDto = $this->generate($user, $otpChannel);
+        $otpDto = $this->generate($user, $normalizedChannel);
 
-        $recipient = $otpChannel === 'email' ? $user->email : $user->phone;
+        $recipient = $this->resolveRecipient($user, $normalizedChannel);
 
         SendOtpNotificationJob::dispatch($recipient, $otpDto->code);
+    }
+
+    private function normalizeChannel(string $channel): string
+    {
+        return self::CHANNEL_MAP[$channel]
+            ?? throw new InvalidArgumentException("Invalid OTP channel: {$channel}");
+    }
+
+    private function resolveRecipient(User $user, string $normalizedChannel): string
+    {
+        return match ($normalizedChannel) {
+            'email' => $user->email,
+            'sms' => $user->phone,
+            default => throw new InvalidArgumentException("No recipient for channel: {$normalizedChannel}"),
+        };
     }
 }
