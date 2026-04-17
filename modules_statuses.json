@@ -2,5 +2,6 @@
     "Auth": true,
     "Authorization": true,
     "Movie": true,
-    "Article": true
+    "Article": true,
+    "Discussion": true
 }
