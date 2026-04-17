@@ -3,5 +3,7 @@
     "Authorization": true,
     "Movie": true,
     "Article": true,
-    "Discussion": true
+    "Discussion": true,
+    "Category": true,
+    "Tag": true
 }
