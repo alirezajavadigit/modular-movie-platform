@@ -7,9 +7,12 @@ namespace Modules\Article\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Article\Database\Factories\ArticleFactory;
 use Modules\Auth\Models\User;
+use Modules\Category\Models\Category;
+use Modules\Tag\Models\Tag;
 use Spatie\Translatable\HasTranslations;
 
 class Article extends Model
@@ -41,10 +44,10 @@ class Article extends Model
     protected function casts(): array
     {
         return [
-            'is_featured' => 'boolean',
+            'is_featured'    => 'boolean',
             'allow_comments' => 'boolean',
-            'read_time' => 'integer',
-            'published_at' => 'datetime',
+            'read_time'      => 'integer',
+            'published_at'   => 'datetime',
         ];
     }
 
@@ -53,6 +56,27 @@ class Article extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function categories(): MorphToMany
+    {
+        return $this->morphToMany(
+            Category::class,
+            'categorizable',
+            'categorizables',
+            'categorizable_id',
+            'category_id',
+        )->withTimestamps();
+    }
+
+    public function tags(): MorphToMany
+    {
+        return $this->morphToMany(
+            Tag::class,
+            'taggable',
+            'taggables',
+            'taggable_id',
+            'tag_id',
+        )->withTimestamps();
+    }
 
     protected static function newFactory(): ArticleFactory
     {
