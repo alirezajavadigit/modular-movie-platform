@@ -3,20 +3,27 @@
 namespace Modules\Article\Tests\Feature;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Mockery;
 use Modules\Article\Contracts\ArticleServiceInterface;
 use Modules\Article\Models\Article;
 use Modules\Auth\Models\User;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class ArticleFeatureTest extends TestCase
 {
+    use RefreshDatabase;
+
     private ArticleServiceInterface $service;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $this->service = Mockery::mock(ArticleServiceInterface::class);
         $this->app->instance(ArticleServiceInterface::class, $this->service);
@@ -66,7 +73,30 @@ class ArticleFeatureTest extends TestCase
 
     private function asAdmin(): static
     {
-        return $this->actingAs(User::factory()->make(['id' => 1]), 'api');
+        $user = User::factory()->create();
+
+        $permissions = [
+            'articles.viewAny',
+            'articles.view',
+            'articles.create',
+            'articles.update',
+            'articles.delete',
+            'articles.restore',
+            'articles.forceDelete',
+            'articles.publish',
+            'articles.archive',
+            'articles.markAsDraft',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::findOrCreate($permission, 'api');
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        $user->givePermissionTo($permissions);
+
+        return $this->actingAs($user, 'api');
     }
 
     private function storePayload(array $override = []): array
