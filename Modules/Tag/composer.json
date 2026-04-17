@@ -1,0 +1,32 @@
+{
+    "name": "alirezajavadi/tag",
+    "description": "Tag management module",
+    "authors": [
+        {
+            "name": "Alireza Javadi",
+            "email": "alirezajavadigit@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "alirezajavadi/authorization": "*"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Tag\\": "app/",
+            "Modules\\Tag\\Database\\Factories\\": "database/factories/",
+            "Modules\\Tag\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Tag\\Tests\\": "tests/"
+        }
+    }
+}
