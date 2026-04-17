@@ -1,0 +1,11 @@
+{
+    "name": "Category",
+    "alias": "category",
+    "description": "Category management module with polymorphic relationships",
+    "keywords": [],
+    "priority": 3,
+    "providers": [
+        "Modules\\Category\\Providers\\CategoryServiceProvider"
+    ],
+    "files": []
+}
