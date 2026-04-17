@@ -4,11 +4,13 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Nwidart\Modules\Facades\Module;
 use ReflectionClass;
 use ReflectionMethod;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class SyncPermissionsCommand extends Command
@@ -16,11 +18,18 @@ class SyncPermissionsCommand extends Command
     protected $signature = 'permissions:sync
                             {--module= : Sync only a specific module by name}
                             {--fresh : Delete all permissions and re-create from scratch}
-                            {--dry-run : Show what would be created/deleted without touching the DB}';
+                            {--dry-run : Show what would be created/deleted without touching the DB}
+                            {--skip-admin : Do not create/update the default super admin user}';
 
     protected $description = 'Sync permissions from Policy classes across all nwidart/laravel-modules';
 
     private const GUARD = 'api';
+
+    private const SUPER_ADMIN_ROLE = 'super_admin';
+
+    private const DEFAULT_ADMIN_NAME = 'admin';
+    private const DEFAULT_ADMIN_EMAIL = 'admin@gmail.com';
+    private const DEFAULT_ADMIN_PASSWORD = '12345678';
 
     private const EXCLUDED_METHODS = [
         '__construct',
@@ -68,6 +77,10 @@ class SyncPermissionsCommand extends Command
             $this->runFresh($discovered);
         } else {
             $this->runSync($discovered);
+        }
+
+        if (!$this->option('skip-admin')) {
+            $this->syncSuperAdmin();
         }
 
         return self::SUCCESS;
@@ -318,5 +331,51 @@ class SyncPermissionsCommand extends Command
         if ($toCreate->isEmpty() && $toDelete->isEmpty()) {
             $this->info('Already in sync.');
         }
+    }
+
+    private function syncSuperAdmin(): void
+    {
+        $this->newLine();
+        $this->info('Syncing super admin role and default user...');
+
+        $role = Role::firstOrCreate(
+            ['name' => self::SUPER_ADMIN_ROLE, 'guard_name' => self::GUARD]
+        );
+
+        $allPermissions = Permission::where('guard_name', self::GUARD)->pluck('name')->all();
+        $role->syncPermissions($allPermissions);
+
+        $this->line("  <fg=green>✓</> Role '" . self::SUPER_ADMIN_ROLE . "' has " . count($allPermissions) . ' permissions');
+
+        $userModel = config('auth.providers.users.model', \App\Models\User::class);
+
+        $user = $userModel::firstOrNew(['email' => self::DEFAULT_ADMIN_EMAIL]);
+
+        $wasRecentlyCreated = !$user->exists;
+
+        if ($wasRecentlyCreated) {
+            $user->name = self::DEFAULT_ADMIN_NAME;
+            $user->password = Hash::make(self::DEFAULT_ADMIN_PASSWORD);
+
+            if (in_array('email_verified_at', $user->getFillable(), true) || $user->hasCast('email_verified_at')) {
+                $user->email_verified_at = now();
+            } else {
+                $user->email_verified_at = now();
+            }
+
+            $user->save();
+            $this->line('  <fg=green>+</> Created default admin user: ' . self::DEFAULT_ADMIN_EMAIL);
+        } else {
+            $this->line('  <fg=yellow>~</> Admin user already exists: ' . self::DEFAULT_ADMIN_EMAIL);
+        }
+
+        if (!$user->hasRole(self::SUPER_ADMIN_ROLE)) {
+            $user->assignRole($role);
+            $this->line("  <fg=green>✓</> Assigned '" . self::SUPER_ADMIN_ROLE . "' role to user");
+        } else {
+            $this->line("  <fg=yellow>~</> User already has '" . self::SUPER_ADMIN_ROLE . "' role");
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }
