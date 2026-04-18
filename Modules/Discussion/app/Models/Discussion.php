@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Auth\Models\User;
 use Modules\Discussion\Database\Factories\DiscussionFactory;
@@ -90,6 +91,8 @@ class Discussion extends Model
 
     public function scopeForDiscussionable($query, string $type, int $id)
     {
+        $type = Relation::getMorphAlias($type);
+
         return $query->where('discussionable_type', $type)->where('discussionable_id', $id);
     }
 

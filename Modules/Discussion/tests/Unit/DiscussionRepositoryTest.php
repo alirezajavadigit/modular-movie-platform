@@ -9,8 +9,10 @@ use Modules\Auth\Models\User;
 use Modules\Discussion\Enums\DiscussionStatus;
 use Modules\Discussion\Models\Discussion;
 use Modules\Discussion\Repositories\DiscussionRepository;
+use Modules\Movie\Models\Episode;
 use Modules\Movie\Models\Movie;
 use Tests\TestCase;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class DiscussionRepositoryTest extends TestCase
 {
@@ -51,7 +53,7 @@ class DiscussionRepositoryTest extends TestCase
 
         Discussion::factory()->count(5)->for($user)->for($movie, 'discussionable')->create();
         Discussion::factory()->count(3)->for($user)->create([
-            'discussionable_type' => 'Modules\\Episode\\Models\\Episode',
+            'discussionable_type' => Relation::getMorphAlias(Episode::class),
             'discussionable_id'   => 1,
         ]);
 
