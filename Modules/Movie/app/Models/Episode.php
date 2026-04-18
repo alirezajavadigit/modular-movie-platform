@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Movie\Database\Factories\EpisodeFactory;
+use Modules\Person\Concerns\HasCredits;
 
 class Episode extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasCredits;
 
     protected $fillable = [
         'movie_id',
