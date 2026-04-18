@@ -12,11 +12,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Article\Database\Factories\ArticleFactory;
 use Modules\Auth\Models\User;
 use Modules\Category\Models\Category;
+use Modules\Person\Concerns\HasCredits;
 use Modules\Tag\Models\Tag;
 use Spatie\Translatable\HasTranslations;
 
 class Article extends Model
 {
+    use HasCredits;
     use HasFactory;
     use HasTranslations;
     use SoftDeletes;
