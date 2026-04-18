@@ -44,8 +44,7 @@ class ArticleRepositoryTest extends TestCase
         $this->secondUser = User::factory()->create();
     }
 
-    #[Test]
-    public function find_by_id_returns_article_when_found(): void
+    public function test_find_by_id_returns_article_when_found(): void
     {
         $article = Article::factory()->create($this->articleData());
 
@@ -55,16 +54,14 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals($article->id, $result->id);
     }
 
-    #[Test]
-    public function find_by_id_returns_null_when_not_found(): void
+    public function test_find_by_id_returns_null_when_not_found(): void
     {
         $result = $this->repository->findById(999);
 
         $this->assertNull($result);
     }
 
-    #[Test]
-    public function find_by_slug_returns_article_when_found(): void
+    public function test_find_by_slug_returns_article_when_found(): void
     {
         $article = Article::factory()->create($this->articleData(['slug' => ['en' => 'test-slug']]));
 
@@ -74,16 +71,14 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals($article->id, $result->id);
     }
 
-    #[Test]
-    public function find_by_slug_returns_null_when_not_found(): void
+    public function test_find_by_slug_returns_null_when_not_found(): void
     {
         $result = $this->repository->findBySlug('non-existent-slug');
 
         $this->assertNull($result);
     }
 
-    #[Test]
-    public function find_by_field_returns_matching_articles(): void
+    public function test_find_by_field_returns_matching_articles(): void
     {
         Article::factory()->count(2)->create($this->articleData(['status' => 'published']));
         Article::factory()->count(3)->create($this->articleData(['status' => 'draft']));
@@ -94,16 +89,14 @@ class ArticleRepositoryTest extends TestCase
         $results->each(fn($a) => $this->assertEquals('draft', $a->status));
     }
 
-    #[Test]
-    public function find_by_field_returns_empty_collection_when_no_match(): void
+    public function test_find_by_field_returns_empty_collection_when_no_match(): void
     {
         $results = $this->repository->findByField('status', 'non-existent');
 
         $this->assertTrue($results->isEmpty());
     }
 
-    #[Test]
-    public function get_all_returns_all_articles_ordered_by_latest(): void
+    public function test_get_all_returns_all_articles_ordered_by_latest(): void
     {
         $first  = Article::factory()->create($this->articleData(['created_at' => now()->subDays(2)]));
         $second = Article::factory()->create($this->articleData(['created_at' => now()->subDay()]));
@@ -116,16 +109,14 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals($first->id, $results->last()->id);
     }
 
-    #[Test]
-    public function get_all_returns_empty_collection_when_no_articles(): void
+    public function test_get_all_returns_empty_collection_when_no_articles(): void
     {
         $results = $this->repository->getAll();
 
         $this->assertTrue($results->isEmpty());
     }
 
-    #[Test]
-    public function paginate_returns_paginated_articles(): void
+    public function test_paginate_returns_paginated_articles(): void
     {
         Article::factory()->count(20)->create($this->articleData());
 
@@ -136,8 +127,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(20, $result->total());
     }
 
-    #[Test]
-    public function paginate_uses_default_per_page(): void
+    public function test_paginate_uses_default_per_page(): void
     {
         Article::factory()->count(20)->create($this->articleData());
 
@@ -146,8 +136,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(15, $result->perPage());
     }
 
-    #[Test]
-    public function get_published_returns_only_published_articles(): void
+    public function test_get_published_returns_only_published_articles(): void
     {
         Article::factory()->count(3)->create($this->articleData([
             'status'       => 'published',
@@ -161,8 +150,7 @@ class ArticleRepositoryTest extends TestCase
         collect($result->items())->each(fn($a) => $this->assertEquals('published', $a->status));
     }
 
-    #[Test]
-    public function get_published_excludes_articles_without_published_at(): void
+    public function test_get_published_excludes_articles_without_published_at(): void
     {
         Article::factory()->create($this->articleData(['status' => 'published', 'published_at' => null]));
         Article::factory()->create($this->articleData(['status' => 'published', 'published_at' => now()]));
@@ -172,8 +160,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(1, $result->total());
     }
 
-    #[Test]
-    public function get_published_orders_by_published_at_descending(): void
+    public function test_get_published_orders_by_published_at_descending(): void
     {
         $older = Article::factory()->create($this->articleData([
             'status'       => 'published',
@@ -190,8 +177,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals($older->id, $result->items()[1]->id);
     }
 
-    #[Test]
-    public function get_drafts_returns_only_draft_articles(): void
+    public function test_get_drafts_returns_only_draft_articles(): void
     {
         Article::factory()->count(3)->create($this->articleData(['status' => 'draft']));
         Article::factory()->count(2)->create($this->articleData(['status' => 'published', 'published_at' => now()]));
@@ -202,8 +188,7 @@ class ArticleRepositoryTest extends TestCase
         collect($result->items())->each(fn($a) => $this->assertEquals('draft', $a->status));
     }
 
-    #[Test]
-    public function get_archived_returns_only_archived_articles(): void
+    public function test_get_archived_returns_only_archived_articles(): void
     {
         Article::factory()->count(2)->create($this->articleData(['status' => 'archived']));
         Article::factory()->count(3)->create($this->articleData(['status' => 'draft']));
@@ -214,8 +199,7 @@ class ArticleRepositoryTest extends TestCase
         collect($result->items())->each(fn($a) => $this->assertEquals('archived', $a->status));
     }
 
-    #[Test]
-    public function get_by_status_returns_articles_with_given_status(): void
+    public function test_get_by_status_returns_articles_with_given_status(): void
     {
         Article::factory()->count(4)->create($this->articleData(['status' => 'published', 'published_at' => now()]));
         Article::factory()->count(2)->create($this->articleData(['status' => 'draft']));
@@ -225,8 +209,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(4, $result->total());
     }
 
-    #[Test]
-    public function get_by_status_returns_empty_paginator_for_unknown_status(): void
+    public function test_get_by_status_returns_empty_paginator_for_unknown_status(): void
     {
         Article::factory()->count(3)->create($this->articleData(['status' => 'draft']));
 
@@ -235,8 +218,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(0, $result->total());
     }
 
-    #[Test]
-    public function get_by_author_returns_articles_for_given_user(): void
+    public function test_get_by_author_returns_articles_for_given_user(): void
     {
         Article::factory()->count(3)->create($this->articleData(['user_id' => $this->admin->id]));
         Article::factory()->count(2)->create($this->articleData(['user_id' => $this->secondUser->id]));
@@ -247,24 +229,21 @@ class ArticleRepositoryTest extends TestCase
         collect($result->items())->each(fn($a) => $this->assertEquals($this->admin->id, $a->user_id));
     }
 
-    #[Test]
-    public function get_by_author_returns_empty_paginator_when_no_articles(): void
+    public function test_get_by_author_returns_empty_paginator_when_no_articles(): void
     {
         $result = $this->repository->getByAuthor(999);
 
         $this->assertEquals(0, $result->total());
     }
 
-    #[Test]
-    public function get_related_throws_exception_when_article_not_found(): void
+    public function test_get_related_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
         $this->repository->getRelated(999);
     }
 
-    #[Test]
-    public function search_finds_articles_by_title(): void
+    public function test_search_finds_articles_by_title(): void
     {
         Article::factory()->create($this->articleData([
             'title'        => ['en' => 'Laravel Testing Guide'],
@@ -282,8 +261,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(1, $result->total());
     }
 
-    #[Test]
-    public function search_finds_articles_by_body(): void
+    public function test_search_finds_articles_by_body(): void
     {
         Article::factory()->create($this->articleData([
             'body'         => ['en' => 'This article covers PHPUnit testing.'],
@@ -296,8 +274,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(1, $result->total());
     }
 
-    #[Test]
-    public function search_finds_articles_by_summary(): void
+    public function test_search_finds_articles_by_summary(): void
     {
         Article::factory()->create($this->articleData([
             'summary'      => ['en' => 'An introduction to Eloquent ORM.'],
@@ -310,8 +287,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(1, $result->total());
     }
 
-    #[Test]
-    public function search_only_returns_published_articles(): void
+    public function test_search_only_returns_published_articles(): void
     {
         Article::factory()->create($this->articleData([
             'title'  => ['en' => 'Draft Article about Laravel'],
@@ -323,8 +299,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(0, $result->total());
     }
 
-    #[Test]
-    public function search_returns_empty_when_no_match(): void
+    public function test_search_returns_empty_when_no_match(): void
     {
         Article::factory()->create($this->articleData(['status' => 'published', 'published_at' => now()]));
 
@@ -333,8 +308,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(0, $result->total());
     }
 
-    #[Test]
-    public function create_persists_article_with_correct_attributes(): void
+    public function test_create_persists_article_with_correct_attributes(): void
     {
         $dto = new CreateArticleDTO(
             userId: $this->admin->id,
@@ -361,8 +335,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertNull($article->published_at);
     }
 
-    #[Test]
-    public function create_returns_an_article_model(): void
+    public function test_create_returns_an_article_model(): void
     {
         $dto = new CreateArticleDTO(
             userId: $this->admin->id,
@@ -383,8 +356,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertNotNull($article->id);
     }
 
-    #[Test]
-    public function update_modifies_article_attributes(): void
+    public function test_update_modifies_article_attributes(): void
     {
         $article = Article::factory()->create($this->articleData(['title' => ['en' => 'Old Title']]));
 
@@ -408,8 +380,7 @@ class ArticleRepositoryTest extends TestCase
         $this->assertNotNull($updated->published_at);
     }
 
-    #[Test]
-    public function update_throws_exception_when_article_not_found(): void
+    public function test_update_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
@@ -428,8 +399,7 @@ class ArticleRepositoryTest extends TestCase
         $this->repository->update(999, $dto);
     }
 
-    #[Test]
-    public function delete_soft_deletes_the_article(): void
+    public function test_delete_soft_deletes_the_article(): void
     {
         $article = Article::factory()->create($this->articleData());
 
@@ -439,16 +409,14 @@ class ArticleRepositoryTest extends TestCase
         $this->assertSoftDeleted('articles', ['id' => $article->id]);
     }
 
-    #[Test]
-    public function delete_throws_exception_when_article_not_found(): void
+    public function test_delete_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
         $this->repository->delete(999);
     }
 
-    #[Test]
-    public function force_delete_permanently_removes_article(): void
+    public function test_force_delete_permanently_removes_article(): void
     {
         $article = Article::factory()->create($this->articleData());
         $article->delete();
@@ -459,16 +427,14 @@ class ArticleRepositoryTest extends TestCase
         $this->assertDatabaseMissing('articles', ['id' => $article->id]);
     }
 
-    #[Test]
-    public function force_delete_throws_exception_when_article_not_found(): void
+    public function test_force_delete_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
         $this->repository->forceDelete(999);
     }
 
-    #[Test]
-    public function restore_recovers_a_soft_deleted_article(): void
+    public function test_restore_recovers_a_soft_deleted_article(): void
     {
         $article = Article::factory()->create($this->articleData());
         $article->delete();
@@ -478,16 +444,14 @@ class ArticleRepositoryTest extends TestCase
         $this->assertNull($restored->deleted_at);
     }
 
-    #[Test]
-    public function restore_throws_exception_when_article_not_found(): void
+    public function test_restore_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
         $this->repository->restore(999);
     }
 
-    #[Test]
-    public function get_trashed_returns_only_soft_deleted_articles(): void
+    public function test_get_trashed_returns_only_soft_deleted_articles(): void
     {
         Article::factory()->count(2)->create($this->articleData());
 
@@ -499,22 +463,19 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals(3, $result->total());
     }
 
-    #[Test]
-    public function exists_returns_true_when_article_exists(): void
+    public function test_exists_returns_true_when_article_exists(): void
     {
         $article = Article::factory()->create($this->articleData());
 
         $this->assertTrue($this->repository->exists($article->id));
     }
 
-    #[Test]
-    public function exists_returns_false_when_article_does_not_exist(): void
+    public function test_exists_returns_false_when_article_does_not_exist(): void
     {
         $this->assertFalse($this->repository->exists(999));
     }
 
-    #[Test]
-    public function publish_sets_status_to_published_and_sets_published_at(): void
+    public function test_publish_sets_status_to_published_and_sets_published_at(): void
     {
         $article = Article::factory()->create($this->articleData(['status' => 'draft', 'published_at' => null]));
 
@@ -524,16 +485,14 @@ class ArticleRepositoryTest extends TestCase
         $this->assertNotNull($result->published_at);
     }
 
-    #[Test]
-    public function publish_throws_exception_when_article_not_found(): void
+    public function test_publish_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
         $this->repository->publish(999);
     }
 
-    #[Test]
-    public function archive_sets_status_to_archived(): void
+    public function test_archive_sets_status_to_archived(): void
     {
         $article = Article::factory()->create($this->articleData(['status' => 'published', 'published_at' => now()]));
 
@@ -542,16 +501,14 @@ class ArticleRepositoryTest extends TestCase
         $this->assertEquals('archived', $result->status);
     }
 
-    #[Test]
-    public function archive_throws_exception_when_article_not_found(): void
+    public function test_archive_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
         $this->repository->archive(999);
     }
 
-    #[Test]
-    public function mark_as_draft_sets_status_to_draft_and_clears_published_at(): void
+    public function test_mark_as_draft_sets_status_to_draft_and_clears_published_at(): void
     {
         $article = Article::factory()->create($this->articleData([
             'status'       => 'published',
@@ -564,24 +521,21 @@ class ArticleRepositoryTest extends TestCase
         $this->assertNull($result->published_at);
     }
 
-    #[Test]
-    public function mark_as_draft_throws_exception_when_article_not_found(): void
+    public function test_mark_as_draft_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
         $this->repository->markAsDraft(999);
     }
 
-    #[Test]
-    public function sync_categories_throws_exception_when_article_not_found(): void
+    public function test_sync_categories_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
         $this->repository->syncCategories(999, [1, 2]);
     }
 
-    #[Test]
-    public function sync_tags_throws_exception_when_article_not_found(): void
+    public function test_sync_tags_throws_exception_when_article_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
