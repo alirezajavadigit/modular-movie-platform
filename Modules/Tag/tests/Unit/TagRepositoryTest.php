@@ -40,7 +40,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function find_by_id_returns_tag_when_found(): void
+    public function test_find_by_id_returns_tag_when_found(): void
     {
         $tag = Tag::factory()->create($this->tagData());
 
@@ -51,13 +51,13 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function find_by_id_returns_null_when_not_found(): void
+    public function test_find_by_id_returns_null_when_not_found(): void
     {
         $this->assertNull($this->repository->findById(999));
     }
 
 
-    public function find_by_slug_returns_tag_when_found(): void
+    public function test_find_by_slug_returns_tag_when_found(): void
     {
         $tag = Tag::factory()->create($this->tagData(['slug' => ['en' => 'laravel-framework']]));
 
@@ -68,13 +68,13 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function find_by_slug_returns_null_when_not_found(): void
+    public function test_find_by_slug_returns_null_when_not_found(): void
     {
         $this->assertNull($this->repository->findBySlug('non-existent'));
     }
 
 
-    public function find_by_field_returns_matching_tags(): void
+    public function test_find_by_field_returns_matching_tags(): void
     {
         Tag::factory()->count(2)->create($this->tagData(['is_active' => true]));
         Tag::factory()->count(3)->create($this->tagData(['is_active' => false]));
@@ -85,7 +85,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function get_all_returns_all_tags(): void
+    public function test_get_all_returns_all_tags(): void
     {
         Tag::factory()->count(4)->create($this->tagData());
 
@@ -95,13 +95,13 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function get_all_returns_empty_when_no_tags(): void
+    public function test_get_all_returns_empty_when_no_tags(): void
     {
         $this->assertTrue($this->repository->getAll()->isEmpty());
     }
 
 
-    public function paginate_returns_paginated_tags(): void
+    public function test_paginate_returns_paginated_tags(): void
     {
         Tag::factory()->count(20)->create($this->tagData());
 
@@ -113,7 +113,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function paginate_uses_default_per_page(): void
+    public function test_paginate_uses_default_per_page(): void
     {
         Tag::factory()->count(20)->create($this->tagData());
 
@@ -121,7 +121,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function get_active_returns_only_active_tags(): void
+    public function test_get_active_returns_only_active_tags(): void
     {
         Tag::factory()->count(3)->create($this->tagData(['is_active' => true]));
         Tag::factory()->count(2)->create($this->tagData(['is_active' => false]));
@@ -132,7 +132,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function get_popular_orders_tags_by_article_count_desc(): void
+    public function test_get_popular_orders_tags_by_article_count_desc(): void
     {
         $popular = Tag::factory()->create($this->tagData());
         $lessPopular = Tag::factory()->create($this->tagData());
@@ -149,7 +149,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function get_popular_excludes_inactive_tags(): void
+    public function test_get_popular_excludes_inactive_tags(): void
     {
         Tag::factory()->create($this->tagData(['is_active' => false]));
         Tag::factory()->count(2)->create($this->tagData(['is_active' => true]));
@@ -160,7 +160,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function get_popular_respects_limit(): void
+    public function test_get_popular_respects_limit(): void
     {
         Tag::factory()->count(10)->create($this->tagData(['is_active' => true]));
 
@@ -170,7 +170,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function search_finds_active_tags_matching_query(): void
+    public function test_search_finds_active_tags_matching_query(): void
     {
         Tag::factory()->create($this->tagData([
             'name'      => ['en' => 'Laravel Tag'],
@@ -187,7 +187,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function search_excludes_inactive_tags(): void
+    public function test_search_excludes_inactive_tags(): void
     {
         Tag::factory()->create($this->tagData([
             'name'      => ['en' => 'Laravel Tag'],
@@ -198,7 +198,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function create_persists_tag_with_dto_data(): void
+    public function test_create_persists_tag_with_dto_data(): void
     {
         $dto = new CreateTagDTO(
             name: ['en' => 'New Tag'],
@@ -217,7 +217,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function update_modifies_tag_attributes(): void
+    public function test_update_modifies_tag_attributes(): void
     {
         $tag = Tag::factory()->create($this->tagData(['is_active' => true, 'color' => '#ff0000']));
 
@@ -236,7 +236,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function update_throws_exception_when_tag_not_found(): void
+    public function test_update_throws_exception_when_tag_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
 
@@ -252,7 +252,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function delete_soft_deletes_the_tag(): void
+    public function test_delete_soft_deletes_the_tag(): void
     {
         $tag = Tag::factory()->create($this->tagData());
 
@@ -261,14 +261,14 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function delete_throws_exception_when_tag_not_found(): void
+    public function test_delete_throws_exception_when_tag_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
         $this->repository->delete(999);
     }
 
 
-    public function force_delete_permanently_removes_tag(): void
+    public function test_force_delete_permanently_removes_tag(): void
     {
         $tag = Tag::factory()->create($this->tagData());
         $tag->delete();
@@ -278,14 +278,14 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function force_delete_throws_exception_when_tag_not_found(): void
+    public function test_force_delete_throws_exception_when_tag_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
         $this->repository->forceDelete(999);
     }
 
 
-    public function restore_recovers_a_soft_deleted_tag(): void
+    public function test_restore_recovers_a_soft_deleted_tag(): void
     {
         $tag = Tag::factory()->create($this->tagData());
         $tag->delete();
@@ -296,14 +296,14 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function restore_throws_exception_when_tag_not_found(): void
+    public function test_restore_throws_exception_when_tag_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
         $this->repository->restore(999);
     }
 
 
-    public function get_trashed_returns_only_soft_deleted_tags(): void
+    public function test_get_trashed_returns_only_soft_deleted_tags(): void
     {
         Tag::factory()->count(2)->create($this->tagData());
 
@@ -316,7 +316,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function exists_returns_true_when_tag_exists(): void
+    public function test_exists_returns_true_when_tag_exists(): void
     {
         $tag = Tag::factory()->create($this->tagData());
 
@@ -324,13 +324,13 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function exists_returns_false_when_tag_does_not_exist(): void
+    public function test_exists_returns_false_when_tag_does_not_exist(): void
     {
         $this->assertFalse($this->repository->exists(999));
     }
 
 
-    public function activate_sets_is_active_to_true(): void
+    public function test_activate_sets_is_active_to_true(): void
     {
         $tag = Tag::factory()->create($this->tagData(['is_active' => false]));
 
@@ -340,14 +340,14 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function activate_throws_exception_when_tag_not_found(): void
+    public function test_activate_throws_exception_when_tag_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
         $this->repository->activate(999);
     }
 
 
-    public function deactivate_sets_is_active_to_false(): void
+    public function test_deactivate_sets_is_active_to_false(): void
     {
         $tag = Tag::factory()->create($this->tagData(['is_active' => true]));
 
@@ -357,7 +357,7 @@ class TagRepositoryTest extends TestCase
     }
 
 
-    public function deactivate_throws_exception_when_tag_not_found(): void
+    public function test_deactivate_throws_exception_when_tag_not_found(): void
     {
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
         $this->repository->deactivate(999);
