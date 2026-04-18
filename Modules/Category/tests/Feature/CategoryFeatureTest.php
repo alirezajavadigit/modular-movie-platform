@@ -237,10 +237,12 @@ class CategoryFeatureTest extends TestCase
 
         $category->articles()->attach($article->id);
 
+        $expectedType = \Illuminate\Database\Eloquent\Relations\Relation::getMorphAlias(Article::class);
+
         $this->assertDatabaseHas('categorizables', [
-            'category_id'         => $category->id,
-            'categorizable_id'    => $article->id,
-            'categorizable_type'  => Article::class,
+            'category_id'        => $category->id,
+            'categorizable_id'   => $article->id,
+            'categorizable_type' => $expectedType,
         ]);
 
         $this->assertTrue($category->articles()->where('articles.id', $article->id)->exists());
@@ -258,10 +260,12 @@ class CategoryFeatureTest extends TestCase
         $category->articles()->attach($article->id);
         $category->articles()->detach($article->id);
 
+        $expectedType = \Illuminate\Database\Eloquent\Relations\Relation::getMorphAlias(Article::class);
+
         $this->assertDatabaseMissing('categorizables', [
-            'category_id'         => $category->id,
-            'categorizable_id'    => $article->id,
-            'categorizable_type'  => Article::class,
+            'category_id'        => $category->id,
+            'categorizable_id'   => $article->id,
+            'categorizable_type' => $expectedType,
         ]);
     }
 }
