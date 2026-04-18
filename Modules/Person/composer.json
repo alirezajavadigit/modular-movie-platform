@@ -1,0 +1,32 @@
+{
+    "name": "alirezajavadi/person",
+    "description": "Person and Credit management module with polymorphic credits (cast & crew) for movies, episodes, and articles.",
+    "authors": [
+        {
+            "name": "Alireza Javadi",
+            "email": "alirezajavadigit@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "alirezajavadi/authorization": "*"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Person\\": "app/",
+            "Modules\\Person\\Database\\Factories\\": "database/factories/",
+            "Modules\\Person\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Person\\Tests\\": "tests/"
+        }
+    }
+}

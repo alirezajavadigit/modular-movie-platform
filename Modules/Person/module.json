@@ -1,0 +1,11 @@
+{
+    "name": "Person",
+    "alias": "person",
+    "description": "Manages people (actors, directors, writers, producers, composers, crew, etc.) and their credits across movies, episodes, and articles via a dedicated polymorphic Credit model.",
+    "keywords": ["person", "credit", "cast", "crew", "polymorphic"],
+    "priority": 4,
+    "providers": [
+        "Modules\\Person\\Providers\\PersonServiceProvider"
+    ],
+    "files": []
+}
