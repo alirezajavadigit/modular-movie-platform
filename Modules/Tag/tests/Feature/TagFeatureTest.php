@@ -222,10 +222,12 @@ class TagFeatureTest extends TestCase
 
         $tag->articles()->attach($article->id);
 
+        $expectedType = \Illuminate\Database\Eloquent\Relations\Relation::getMorphAlias(Article::class);
+
         $this->assertDatabaseHas('taggables', [
             'tag_id'        => $tag->id,
             'taggable_id'   => $article->id,
-            'taggable_type' => Article::class,
+            'taggable_type' => $expectedType,
         ]);
 
         $this->assertTrue($tag->articles()->where('articles.id', $article->id)->exists());
