@@ -102,7 +102,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function find_by_id_returns_category(): void
+    public function test_find_by_id_returns_category(): void
     {
         $category = $this->makeCategory();
 
@@ -112,14 +112,14 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function find_by_id_throws_on_invalid_id(): void
+    public function test_find_by_id_throws_on_invalid_id(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->findById(0);
     }
 
 
-    public function find_by_slug_returns_category(): void
+    public function test_find_by_slug_returns_category(): void
     {
         $category = $this->makeCategory();
 
@@ -129,14 +129,14 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function find_by_slug_throws_on_empty_slug(): void
+    public function test_find_by_slug_throws_on_empty_slug(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->findBySlug('   ');
     }
 
 
-    public function get_all_returns_collection(): void
+    public function test_get_all_returns_collection(): void
     {
         $collection = new Collection([$this->makeCategory()]);
 
@@ -146,7 +146,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function paginate_returns_paginated_result(): void
+    public function test_paginate_returns_paginated_result(): void
     {
         $paginator = $this->makePaginator([$this->makeCategory()]);
 
@@ -156,21 +156,21 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function paginate_throws_on_invalid_per_page(): void
+    public function test_paginate_throws_on_invalid_per_page(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->paginate(0);
     }
 
 
-    public function paginate_throws_when_per_page_exceeds_limit(): void
+    public function test_paginate_throws_when_per_page_exceeds_limit(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->paginate(101);
     }
 
 
-    public function get_active_returns_paginated_result(): void
+    public function test_get_active_returns_paginated_result(): void
     {
         $paginator = $this->makePaginator();
         $this->repository->shouldReceive('getActive')->once()->with(15)->andReturn($paginator);
@@ -179,7 +179,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function get_by_parent_returns_paginated_result(): void
+    public function test_get_by_parent_returns_paginated_result(): void
     {
         $paginator = $this->makePaginator();
         $this->repository->shouldReceive('getByParent')->once()->with(5, 15)->andReturn($paginator);
@@ -188,7 +188,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function get_by_parent_accepts_null_parent_id(): void
+    public function test_get_by_parent_accepts_null_parent_id(): void
     {
         $paginator = $this->makePaginator();
         $this->repository->shouldReceive('getByParent')->once()->with(null, 15)->andReturn($paginator);
@@ -197,14 +197,14 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function get_by_parent_throws_on_negative_parent_id(): void
+    public function test_get_by_parent_throws_on_negative_parent_id(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->getByParent(-1);
     }
 
 
-    public function get_tree_returns_collection(): void
+    public function test_get_tree_returns_collection(): void
     {
         $collection = new Collection([$this->makeCategory()]);
         $this->repository->shouldReceive('getTree')->once()->andReturn($collection);
@@ -213,7 +213,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function search_returns_paginated_result(): void
+    public function test_search_returns_paginated_result(): void
     {
         $paginator = $this->makePaginator();
         $this->repository->shouldReceive('search')->once()->with('tech', 15)->andReturn($paginator);
@@ -222,21 +222,21 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function search_throws_on_empty_query(): void
+    public function test_search_throws_on_empty_query(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->search('  ');
     }
 
 
-    public function search_throws_on_short_query(): void
+    public function test_search_throws_on_short_query(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->search('a');
     }
 
 
-    public function store_creates_category_successfully(): void
+    public function test_store_creates_category_successfully(): void
     {
         $dto = $this->makeCreateDTO();
         $category = $this->makeCategory();
@@ -252,21 +252,21 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function store_throws_on_empty_name(): void
+    public function test_store_throws_on_empty_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->store($this->makeCreateDTO(['name' => []]));
     }
 
 
-    public function store_throws_on_empty_slug(): void
+    public function test_store_throws_on_empty_slug(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->store($this->makeCreateDTO(['slug' => []]));
     }
 
 
-    public function store_throws_when_slug_already_exists(): void
+    public function test_store_throws_when_slug_already_exists(): void
     {
         $this->expectException(LogicException::class);
 
@@ -277,7 +277,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function store_throws_when_parent_id_does_not_exist(): void
+    public function test_store_throws_when_parent_id_does_not_exist(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -288,7 +288,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function update_modifies_category_successfully(): void
+    public function test_update_modifies_category_successfully(): void
     {
         $dto = $this->makeUpdateDTO();
         $category = $this->makeCategory();
@@ -303,14 +303,14 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function update_throws_on_invalid_id(): void
+    public function test_update_throws_on_invalid_id(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->update(0, $this->makeUpdateDTO());
     }
 
 
-    public function update_throws_when_category_not_found(): void
+    public function test_update_throws_when_category_not_found(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -320,7 +320,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function update_throws_when_category_tries_to_be_its_own_parent(): void
+    public function test_update_throws_when_category_tries_to_be_its_own_parent(): void
     {
         $this->expectException(LogicException::class);
 
@@ -331,7 +331,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function update_throws_when_slug_taken_by_another_category(): void
+    public function test_update_throws_when_slug_taken_by_another_category(): void
     {
         $this->expectException(LogicException::class);
 
@@ -345,11 +345,11 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function delete_removes_category_successfully(): void
+    public function test_delete_removes_category_successfully(): void
     {
         $category = $this->makeCategory();
 
-        $childrenRelation = Mockery::mock();
+        $childrenRelation = Mockery::mock(\Illuminate\Database\Eloquent\Relations\HasMany::class);
         $childrenRelation->shouldReceive('exists')->once()->andReturn(false);
         $category->shouldReceive('children')->once()->andReturn($childrenRelation);
 
@@ -360,13 +360,13 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function delete_throws_when_category_has_children(): void
+    public function test_delete_throws_when_category_has_children(): void
     {
         $this->expectException(LogicException::class);
 
         $category = $this->makeCategory();
 
-        $childrenRelation = Mockery::mock();
+        $childrenRelation = Mockery::mock(\Illuminate\Database\Eloquent\Relations\HasMany::class);
         $childrenRelation->shouldReceive('exists')->once()->andReturn(true);
         $category->shouldReceive('children')->once()->andReturn($childrenRelation);
 
@@ -376,27 +376,13 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function delete_throws_on_invalid_id(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->service->delete(0);
-    }
-
-
-    public function delete_throws_when_category_not_found(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->repository->shouldReceive('findById')->once()->andReturn(null);
-        $this->service->delete(1);
-    }
-
-
-    public function delete_throws_runtime_when_repository_fails(): void
+    public function test_delete_throws_runtime_when_repository_fails(): void
     {
         $this->expectException(RuntimeException::class);
 
         $category = $this->makeCategory();
-        $childrenRelation = Mockery::mock();
+
+        $childrenRelation = Mockery::mock(\Illuminate\Database\Eloquent\Relations\HasMany::class);
         $childrenRelation->shouldReceive('exists')->once()->andReturn(false);
         $category->shouldReceive('children')->once()->andReturn($childrenRelation);
 
@@ -407,7 +393,22 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function force_delete_removes_permanently(): void
+    public function test_delete_throws_on_invalid_id(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->service->delete(0);
+    }
+
+
+    public function test_delete_throws_when_category_not_found(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->repository->shouldReceive('findById')->once()->andReturn(null);
+        $this->service->delete(1);
+    }
+
+
+    public function test_force_delete_removes_permanently(): void
     {
         DB::shouldReceive('transaction')->once()->andReturnUsing(fn($cb) => $cb());
         $this->repository->shouldReceive('forceDelete')->once()->with(1)->andReturn(true);
@@ -416,14 +417,14 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function force_delete_throws_on_invalid_id(): void
+    public function test_force_delete_throws_on_invalid_id(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->forceDelete(0);
     }
 
 
-    public function restore_returns_restored_category(): void
+    public function test_restore_returns_restored_category(): void
     {
         $category = $this->makeCategory();
         $this->repository->shouldReceive('restore')->once()->with(1)->andReturn($category);
@@ -432,14 +433,14 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function restore_throws_on_invalid_id(): void
+    public function test_restore_throws_on_invalid_id(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->service->restore(0);
     }
 
 
-    public function get_trashed_returns_paginated_result(): void
+    public function test_get_trashed_returns_paginated_result(): void
     {
         $paginator = $this->makePaginator();
         $this->repository->shouldReceive('getTrashed')->once()->with(15)->andReturn($paginator);
@@ -448,7 +449,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function activate_changes_status_to_active(): void
+    public function test_activate_changes_status_to_active(): void
     {
         $category = $this->makeCategory(['is_active' => false]);
         $activated = $this->makeCategory(['is_active' => true]);
@@ -460,7 +461,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function activate_throws_when_already_active(): void
+    public function test_activate_throws_when_already_active(): void
     {
         $this->expectException(LogicException::class);
 
@@ -471,7 +472,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function activate_throws_when_category_not_found(): void
+    public function test_activate_throws_when_category_not_found(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->repository->shouldReceive('findById')->once()->andReturn(null);
@@ -479,7 +480,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function deactivate_changes_status_to_inactive(): void
+    public function test_deactivate_changes_status_to_inactive(): void
     {
         $category = $this->makeCategory(['is_active' => true]);
         $deactivated = $this->makeCategory(['is_active' => false]);
@@ -491,7 +492,7 @@ class CategoryServiceTest extends TestCase
     }
 
 
-    public function deactivate_throws_when_already_inactive(): void
+    public function test_deactivate_throws_when_already_inactive(): void
     {
         $this->expectException(LogicException::class);
 
