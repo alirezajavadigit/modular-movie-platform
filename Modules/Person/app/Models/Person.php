@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Favorite\Traits\HasFavorite;
 use Modules\Person\Database\Factories\PersonFactory;
 use Modules\Person\Enums\CreditRole;
 use Modules\Person\Enums\Gender;
@@ -17,7 +18,7 @@ class Person extends Model
 {
     use HasFactory;
     use HasTranslations;
-    use SoftDeletes;
+    use SoftDeletes, HasFavorite;
 
     protected $table = 'persons';
 

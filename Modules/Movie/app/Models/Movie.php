@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Favorite\Traits\HasFavorite;
 use Modules\Movie\Database\Factories\MovieFactory;
 use Modules\Movie\Enums\BadgeType;
 use Modules\Movie\Enums\MovieType;
@@ -15,7 +16,7 @@ use Modules\Person\Concerns\HasCredits;
 
 class Movie extends Model
 {
-    use HasFactory, SoftDeletes, HasCredits;
+    use HasFactory, SoftDeletes, HasCredits, HasFavorite;
 
     protected $fillable = [
         'title',
