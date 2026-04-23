@@ -11,7 +11,7 @@ return [
     'morph_map' => [
         'person'  => \Modules\Person\Models\Person::class,
         'movie'   => \Modules\Movie\Models\Movie::class,
-        'episode' => \Modules\Episode\Models\Episode::class,
+        'episode' => \Modules\Movie\Models\Episode::class,
         'article' => \Modules\Article\Models\Article::class,
     ],
 ];
