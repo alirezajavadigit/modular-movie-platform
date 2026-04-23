@@ -1,0 +1,32 @@
+{
+    "name": "alirezajavadi/favorite",
+    "description": "Favorite management module with polymorphic favorites for movies, series, and articles.",
+    "authors": [
+        {
+            "name": "Alireza Javadi",
+            "email": "alirezajavadigit@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "alirezajavadi/authorization": "*"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Favorite\\": "app/",
+            "Modules\\Favorite\\Database\\Factories\\": "database/factories/",
+            "Modules\\Favorite\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Favorite\\Tests\\": "tests/"
+        }
+    }
+}
