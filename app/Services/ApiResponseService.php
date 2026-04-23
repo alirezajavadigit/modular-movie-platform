@@ -31,7 +31,7 @@ final class ApiResponseService
             'success' => true,
             'message' => $message,
             'data' => null,
-        ], Response::HTTP_OK);
+        ], Response::HTTP_NO_CONTENT);
     }
 
     public function error(string $message = 'Something went wrong', int $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR, mixed $errors = null): JsonResponse
@@ -105,8 +105,7 @@ final class ApiResponseService
             'success' => true,
             'message' => $message,
             'data' => $result['data'],
-            'meta' => $result['meta'] ?? null,
-            'pagination' => $result['pagination'] ?? null,
+            'meta' => $result['meta']["pagination"] ?? null,
         ], Response::HTTP_OK);
     }
 
