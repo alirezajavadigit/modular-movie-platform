@@ -93,6 +93,9 @@ seed:
 fresh:
 	$(APP) php artisan migrate:fresh --seed --no-interaction
 
+permission:
+	$(APP) php artisan permission:sync --fresh 
+
 test:
 	$(APP) php artisan test 
 
