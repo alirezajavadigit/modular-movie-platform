@@ -366,15 +366,13 @@ class ArticleFeatureTest extends TestCase
             ->assertUnprocessable();
     }
 
-    public function test_destroy_deletes_article_and_returns_200(): void
+    public function test_destroy_deletes_article_and_returns_204(): void
     {
         $this->service->shouldReceive('delete')->once()->with(1)->andReturn(true);
 
         $this->asAdmin()
             ->deleteJson('/api/v1/admin/articles/1')
-            ->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('data', null);
+            ->assertNoContent();
     }
 
     public function test_publish_returns_published_article(): void
@@ -425,15 +423,13 @@ class ArticleFeatureTest extends TestCase
             ->assertJsonPath('success', true);
     }
 
-    public function test_force_delete_returns_200_with_no_data(): void
+    public function test_force_delete_returns_204_with_no_data(): void
     {
         $this->service->shouldReceive('forceDelete')->once()->with(1)->andReturn(true);
 
         $this->asAdmin()
             ->deleteJson('/api/v1/admin/articles/1/force-delete')
-            ->assertOk()
-            ->assertJsonPath('success', true)
-            ->assertJsonPath('data', null);
+            ->assertNoContent();
     }
 
     public function test_by_status_returns_paginated_list_for_valid_status(): void

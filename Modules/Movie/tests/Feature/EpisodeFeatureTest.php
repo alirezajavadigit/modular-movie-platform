@@ -242,14 +242,14 @@ final class EpisodeFeatureTest extends TestCase
         $response->assertUnauthorized();
     }
 
-    public function test_delete_episode_returns_200(): void
+    public function test_delete_episode_returns_204(): void
     {
         $episode = Episode::factory()->create(['movie_id' => $this->serial->id]);
 
         $response = $this->actingAs($this->admin, 'api')
             ->deleteJson("/api/v1/movies/{$this->serial->id}/episodes/{$episode->id}");
 
-        $response->assertOk();
+        $response->assertNoContent();
 
         $this->assertSoftDeleted('episodes', ['id' => $episode->id]);
     }

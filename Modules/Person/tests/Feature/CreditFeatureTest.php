@@ -209,8 +209,7 @@ class CreditFeatureTest extends TestCase
 
         $this->asAdmin()
             ->deleteJson("/api/v1/admin/credits/{$credit->id}")
-            ->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertNoContent();
 
         $this->assertSoftDeleted('credits', ['id' => $credit->id]);
     }

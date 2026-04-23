@@ -213,8 +213,7 @@ class CategoryFeatureTest extends TestCase
 
         $this->asAdmin()
             ->deleteJson('/api/v1/admin/categories/1')
-            ->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertNoContent();
     }
 
     public function test_restore_returns_restored_category(): void

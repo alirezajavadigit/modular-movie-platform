@@ -312,14 +312,14 @@ final class MovieFeatureTest extends TestCase
         $response->assertUnauthorized();
     }
 
-    public function test_delete_movie_returns_200(): void
+    public function test_delete_movie_returns_204(): void
     {
         $movie = Movie::factory()->create();
 
         $response = $this->actingAs($this->admin, 'api')
             ->deleteJson("/api/v1/movies/{$movie->id}");
 
-        $response->assertOk();
+        $response->assertNoContent();
 
         $this->assertSoftDeleted('movies', ['id' => $movie->id]);
     }

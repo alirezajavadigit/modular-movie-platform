@@ -239,14 +239,14 @@ final class RoleFeatureTest extends TestCase
         $response->assertUnauthorized();
     }
 
-    public function test_delete_role_returns_200(): void
+    public function test_delete_role_returns_204(): void
     {
         $role = Role::factory()->create();
 
         $response = $this->actingAs($this->admin, 'api')
             ->deleteJson("/api/v1/roles/{$role->id}");
 
-        $response->assertOk();
+        $response->assertNoContent();
 
         $this->assertDatabaseMissing('roles', ['id' => $role->id]);
     }

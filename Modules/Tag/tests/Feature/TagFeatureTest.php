@@ -208,8 +208,7 @@ class TagFeatureTest extends TestCase
 
         $this->asAdmin()
             ->deleteJson('/api/v1/admin/tags/1')
-            ->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertNoContent();
     }
 
     public function test_polymorphic_attach_article_to_tag(): void

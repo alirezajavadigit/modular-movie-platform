@@ -228,8 +228,7 @@ class PersonFeatureTest extends TestCase
 
         $this->asAdmin()
             ->deleteJson('/api/v1/admin/persons/1')
-            ->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertNoContent();
     }
 
     public function test_restore_returns_restored(): void
