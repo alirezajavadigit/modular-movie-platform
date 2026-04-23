@@ -6,5 +6,6 @@
     "Discussion": true,
     "Category": true,
     "Tag": true,
-    "Person": true
+    "Person": true,
+    "Favorite": true
 }
