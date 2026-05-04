@@ -204,33 +204,35 @@ class PersonFeatureTest extends TestCase
 
     public function test_show_returns_person(): void
     {
-        $this->service->shouldReceive('findById')->once()->with(1)->andReturn($this->makePerson());
+        $person = Person::factory()->create();
+        $this->service->shouldReceive('findById')->once()->with($person->id)->andReturn($person);
 
         $this->asAdmin()
-            ->getJson('/api/v1/admin/persons/1')
+            ->getJson("/api/v1/admin/persons/{$person->id}")
             ->assertOk()
             ->assertJsonPath('success', true);
     }
 
     public function test_update_modifies_person(): void
     {
-        $this->service->shouldReceive('update')->once()->with(1, Mockery::any())->andReturn($this->makePerson());
+        $person = Person::factory()->create();
+        $this->service->shouldReceive('update')->once()->with($person->id, Mockery::any())->andReturn($person);
 
         $this->asAdmin()
-            ->putJson('/api/v1/admin/persons/1', ['first_name' => ['en' => 'Jane']])
+            ->putJson("/api/v1/admin/persons/{$person->id}", ['first_name' => ['en' => 'Jane']])
             ->assertOk()
             ->assertJsonPath('success', true);
     }
 
     public function test_destroy_deletes_person(): void
     {
-        $this->service->shouldReceive('delete')->once()->with(1)->andReturn(true);
+        $person = Person::factory()->create();
+        $this->service->shouldReceive('delete')->once()->with($person->id)->andReturn(true);
 
         $this->asAdmin()
-            ->deleteJson('/api/v1/admin/persons/1')
+            ->deleteJson("/api/v1/admin/persons/{$person->id}")
             ->assertNoContent();
     }
-
     public function test_restore_returns_restored(): void
     {
         $this->service->shouldReceive('restore')->once()->with(1)->andReturn($this->makePerson());
