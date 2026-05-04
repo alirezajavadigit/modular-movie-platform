@@ -189,30 +189,33 @@ class CategoryFeatureTest extends TestCase
 
     public function test_show_returns_category(): void
     {
-        $this->service->shouldReceive('findById')->once()->with(1)->andReturn($this->makeCategory());
+        $category = Category::factory()->create();
+        $this->service->shouldReceive('findById')->once()->with($category->id)->andReturn($category);
 
         $this->asAdmin()
-            ->getJson('/api/v1/admin/categories/1')
+            ->getJson("/api/v1/admin/categories/{$category->id}")
             ->assertOk()
             ->assertJsonPath('success', true);
     }
 
     public function test_update_modifies_category(): void
     {
-        $this->service->shouldReceive('update')->once()->with(1, Mockery::any())->andReturn($this->makeCategory());
+        $category = Category::factory()->create();
+        $this->service->shouldReceive('update')->once()->with($category->id, Mockery::any())->andReturn($category);
 
         $this->asAdmin()
-            ->putJson('/api/v1/admin/categories/1', ['name' => ['en' => 'Updated']])
+            ->putJson("/api/v1/admin/categories/{$category->id}", ['name' => ['en' => 'Updated']])
             ->assertOk()
             ->assertJsonPath('success', true);
     }
 
     public function test_destroy_deletes_category(): void
     {
-        $this->service->shouldReceive('delete')->once()->with(1)->andReturn(true);
+        $category = Category::factory()->create();
+        $this->service->shouldReceive('delete')->once()->with($category->id)->andReturn(true);
 
         $this->asAdmin()
-            ->deleteJson('/api/v1/admin/categories/1')
+            ->deleteJson("/api/v1/admin/categories/{$category->id}")
             ->assertNoContent();
     }
 
