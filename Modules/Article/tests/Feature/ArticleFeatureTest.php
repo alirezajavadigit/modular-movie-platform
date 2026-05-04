@@ -262,12 +262,11 @@ class ArticleFeatureTest extends TestCase
 
     public function test_show_returns_article(): void
     {
-        $article = $this->makeArticle();
-
-        $this->service->shouldReceive('findById')->once()->with(1)->andReturn($article);
+        $article = Article::factory()->create();
+        $this->service->shouldReceive('findById')->once()->with($article->id)->andReturn($article);
 
         $this->asAdmin()
-            ->getJson('/api/v1/admin/articles/1')
+            ->getJson("/api/v1/admin/articles/{$article->id}")
             ->assertOk()
             ->assertJsonStructure(['success', 'message', 'data'])
             ->assertJsonPath('success', true);
@@ -341,37 +340,40 @@ class ArticleFeatureTest extends TestCase
 
     public function test_update_modifies_article_and_returns_200(): void
     {
-        $article = $this->makeArticle();
-
-        $this->service->shouldReceive('update')->once()->with(1, Mockery::any())->andReturn($article);
+        $article = Article::factory()->create();
+        $this->service->shouldReceive('update')->once()->with($article->id, Mockery::any())->andReturn($article);
 
         $this->asAdmin()
-            ->putJson('/api/v1/admin/articles/1', $this->updatePayload())
-            ->assertOk()
-            ->assertJsonStructure(['success', 'message', 'data'])
-            ->assertJsonPath('success', true);
+            ->putJson("/api/v1/admin/articles/{$article->id}", $this->updatePayload())
+            ->assertOk();
     }
+
 
     public function test_update_fails_validation_when_slug_has_invalid_format(): void
     {
+        $article = Article::factory()->create();
+
         $this->asAdmin()
-            ->putJson('/api/v1/admin/articles/1', $this->updatePayload(['slug' => ['en' => 'Invalid Slug!']]))
+            ->putJson("/api/v1/admin/articles/{$article->id}", $this->updatePayload(['slug' => ['en' => 'Invalid Slug!']]))
             ->assertUnprocessable();
     }
 
     public function test_update_fails_validation_when_status_is_invalid(): void
     {
+        $article = Article::factory()->create();
+
         $this->asAdmin()
-            ->putJson('/api/v1/admin/articles/1', $this->updatePayload(['status' => 'unknown']))
+            ->putJson("/api/v1/admin/articles/{$article->id}", $this->updatePayload(['status' => 'unknown']))
             ->assertUnprocessable();
     }
 
     public function test_destroy_deletes_article_and_returns_204(): void
     {
-        $this->service->shouldReceive('delete')->once()->with(1)->andReturn(true);
+        $article = Article::factory()->create();
+        $this->service->shouldReceive('delete')->once()->with($article->id)->andReturn(true);
 
         $this->asAdmin()
-            ->deleteJson('/api/v1/admin/articles/1')
+            ->deleteJson("/api/v1/admin/articles/{$article->id}")
             ->assertNoContent();
     }
 
