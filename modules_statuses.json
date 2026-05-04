@@ -8,5 +8,6 @@
     "Tag": true,
     "Person": true,
     "Favorite": true,
-    "Like": true
+    "Like": true,
+    "Payment": true
 }
