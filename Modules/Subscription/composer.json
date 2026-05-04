@@ -1,0 +1,25 @@
+{
+    "name": "vendor/subscription",
+    "description": "Subscription module",
+    "authors": [{"name": "Author Name", "email": "email@example.com"}],
+    "require": {
+        "php": "^8.2",
+        "alirezajavadi/authorization": "*",
+        "vendor/payment": "*"
+    },
+    "extra": {
+        "laravel": {"providers": [], "aliases": {}}
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Subscription\\": "app/",
+            "Modules\\Subscription\\Database\\Factories\\": "database/factories/",
+            "Modules\\Subscription\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Subscription\\Tests\\": "tests/"
+        }
+    }
+}
