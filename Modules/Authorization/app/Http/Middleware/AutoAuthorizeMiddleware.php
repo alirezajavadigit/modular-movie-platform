@@ -55,15 +55,14 @@ class AutoAuthorizeMiddleware
 
         if (in_array($action, $modelMethods)) {
             $routeParam = Str::camel(class_basename($modelClass));
-            $paramValue  = $route->parameter($routeParam);
+            $model = $route->parameter($routeParam);
 
-            if (is_numeric($paramValue)) {
-                $model = $modelClass::find((int) $paramValue);
-                if (!$model) {
-                    return $next($request);
-                }
-            } else {
-                $model = $paramValue ?? $modelClass;
+            if (!($model instanceof $modelClass)) {
+                $model = $modelClass::find($model);
+            }
+
+            if (!$model) {
+                abort(404);
             }
 
             Gate::authorize($ability, $model);
