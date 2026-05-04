@@ -9,5 +9,6 @@
     "Person": true,
     "Favorite": true,
     "Like": true,
-    "Payment": true
+    "Payment": true,
+    "Subscription": true
 }
