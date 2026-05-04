@@ -36,28 +36,14 @@ class TagFeatureTest extends TestCase
         Mockery::close();
     }
 
-    private function makeTag(array $attributes = []): Tag
+    private function makeTag(): Tag
     {
-        $tag = Mockery::mock(Tag::class)->makePartial();
+        return Tag::factory()->make(['id' => 1]);
+    }
 
-        foreach (
-            array_merge([
-                'id'         => 1,
-                'color'      => '#ff0000',
-                'is_active'  => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'deleted_at' => null,
-            ], $attributes) as $key => $value
-        ) {
-            $tag->$key = $value;
-        }
-
-        $tag->shouldReceive('getTranslations')->with('name')->andReturn(['en' => 'Laravel']);
-        $tag->shouldReceive('getTranslations')->with('slug')->andReturn(['en' => 'laravel']);
-        $tag->shouldReceive('getTranslations')->with('description')->andReturn([]);
-
-        return $tag;
+    private function createTag(): Tag
+    {
+        return Tag::factory()->create();
     }
 
     private function makePaginator(array $items = []): LengthAwarePaginator
@@ -184,33 +170,34 @@ class TagFeatureTest extends TestCase
 
     public function test_show_returns_tag(): void
     {
-        $this->service->shouldReceive('findById')->once()->with(1)->andReturn($this->makeTag());
+        $tag = $this->createTag();
+        $this->service->shouldReceive('findById')->once()->with($tag->id)->andReturn($tag);
 
         $this->asAdmin()
-            ->getJson('/api/v1/admin/tags/1')
+            ->getJson("/api/v1/admin/tags/{$tag->id}")
             ->assertOk()
             ->assertJsonPath('success', true);
     }
-
     public function test_update_modifies_tag(): void
     {
-        $this->service->shouldReceive('update')->once()->with(1, Mockery::any())->andReturn($this->makeTag());
+        $tag = $this->createTag();
+        $this->service->shouldReceive('update')->once()->with($tag->id, Mockery::any())->andReturn($tag);
 
         $this->asAdmin()
-            ->putJson('/api/v1/admin/tags/1', ['name' => ['en' => 'Updated']])
+            ->putJson("/api/v1/admin/tags/{$tag->id}", ['name' => ['en' => 'Updated']])
             ->assertOk()
             ->assertJsonPath('success', true);
     }
 
     public function test_destroy_deletes_tag(): void
     {
-        $this->service->shouldReceive('delete')->once()->with(1)->andReturn(true);
+        $tag = $this->createTag();
+        $this->service->shouldReceive('delete')->once()->with($tag->id)->andReturn(true);
 
         $this->asAdmin()
-            ->deleteJson('/api/v1/admin/tags/1')
+            ->deleteJson("/api/v1/admin/tags/{$tag->id}")
             ->assertNoContent();
     }
-
     public function test_polymorphic_attach_article_to_tag(): void
     {
         Mockery::close();
