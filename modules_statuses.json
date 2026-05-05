@@ -10,5 +10,6 @@
     "Favorite": true,
     "Like": true,
     "Payment": true,
-    "Subscription": true
+    "Subscription": true,
+    "Notification": true
 }
