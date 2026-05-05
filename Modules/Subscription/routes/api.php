@@ -34,7 +34,7 @@ Route::middleware(['api', 'auth:api', 'auto.authorize'])
 
         Route::get('/', [SubscriptionController::class, 'index']);
         Route::get('{id}', [SubscriptionController::class, 'show']);
-        Route::delete('{id}', [SubscriptionController::class, 'destroy']);
+        Route::delete('{subscription}', [SubscriptionController::class, 'destroy']);
     });
 
 Route::middleware(['api', 'auth:api', 'auto.authorize'])
