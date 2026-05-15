@@ -347,7 +347,7 @@ class SyncPermissionsCommand extends Command
 
         $this->line("  <fg=green>✓</> Role '" . self::SUPER_ADMIN_ROLE . "' has " . count($allPermissions) . ' permissions');
 
-        $userModel = config('auth.providers.users.model', \App\Models\User::class);
+        $userModel = config('auth.providers.users.model', \Modules\Auth\Models\User::class);
 
         $user = $userModel::firstOrNew(['email' => self::DEFAULT_ADMIN_EMAIL]);
 
