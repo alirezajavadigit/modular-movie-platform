@@ -14,7 +14,6 @@ return new class extends Migration
             $table->json('last_name');
             $table->string('slug')->unique();
             $table->json('biography')->nullable();
-            $table->string('image_path')->nullable();
             $table->date('date_of_birth')->nullable();
             $table->date('date_of_death')->nullable();
             $table->json('place_of_birth')->nullable();
