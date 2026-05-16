@@ -12,13 +12,17 @@ use Modules\Favorite\Traits\HasFavorite;
 use Modules\Person\Database\Factories\PersonFactory;
 use Modules\Person\Enums\CreditRole;
 use Modules\Person\Enums\Gender;
+use Spatie\Image\Enums\Fit;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Translatable\HasTranslations;
 
-class Person extends Model
+class Person extends Model implements HasMedia
 {
     use HasFactory;
     use HasTranslations;
-    use SoftDeletes, HasFavorite;
+    use SoftDeletes, HasFavorite, InteractsWithMedia;
 
     protected $table = 'persons';
 
@@ -27,7 +31,6 @@ class Person extends Model
         'last_name',
         'slug',
         'biography',
-        'image_path',
         'date_of_birth',
         'date_of_death',
         'place_of_birth',
@@ -58,6 +61,20 @@ class Person extends Model
     public function credits(): HasMany
     {
         return $this->hasMany(Credit::class);
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('avatar')
+            ->singleFile()
+            ->acceptsMimeTypes(['image/jpeg', 'image/png', 'image/webp']);
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->fit(Fit::Crop, 300, 300)
+            ->nonQueued();
     }
 
     public function actingCredits(): HasMany
