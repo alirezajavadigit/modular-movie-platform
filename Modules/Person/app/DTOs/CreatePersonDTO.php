@@ -9,7 +9,6 @@ readonly class CreatePersonDTO
         public array   $lastName,
         public string  $slug,
         public ?array  $biography,
-        public ?string $imagePath,
         public ?string $dateOfBirth,
         public ?string $dateOfDeath,
         public ?array  $placeOfBirth,
