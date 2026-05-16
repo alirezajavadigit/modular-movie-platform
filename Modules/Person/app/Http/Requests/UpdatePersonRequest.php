@@ -30,7 +30,6 @@ class UpdatePersonRequest extends FormRequest
             'slug'                 => ['sometimes', 'string', 'min:2', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('persons', 'slug')->ignore($id)],
             'biography'            => ['nullable', 'array'],
             'biography.*'          => ['nullable', 'string', 'max:10000'],
-            'image_path'           => ['nullable', 'string', 'max:500'],
             'date_of_birth'        => ['nullable', 'date', 'before:today'],
             'date_of_death'        => ['nullable', 'date', 'after_or_equal:date_of_birth'],
             'place_of_birth'       => ['nullable', 'array'],

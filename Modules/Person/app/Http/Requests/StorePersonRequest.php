@@ -28,7 +28,7 @@ class StorePersonRequest extends FormRequest
             'slug'                 => ['required', 'string', 'min:2', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:persons,slug'],
             'biography'            => ['nullable', 'array'],
             'biography.*'          => ['nullable', 'string', 'max:10000'],
-            'image_path'           => ['nullable', 'string', 'max:500'],
+            'image'                => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:2048'],
             'date_of_birth'        => ['nullable', 'date', 'before:today'],
             'date_of_death'        => ['nullable', 'date', 'after_or_equal:date_of_birth'],
             'place_of_birth'       => ['nullable', 'array'],
