@@ -21,7 +21,6 @@ class PersonFactory extends Factory
             'last_name'            => ['en' => $last],
             'slug'                 => Str::slug($first . '-' . $last) . '-' . $this->faker->unique()->numberBetween(1, 999999),
             'biography'            => ['en' => $this->faker->paragraph(4)],
-            'image_path'           => null,
             'date_of_birth'        => $this->faker->dateTimeBetween('-80 years', '-20 years')->format('Y-m-d'),
             'date_of_death'        => null,
             'place_of_birth'       => ['en' => $this->faker->city() . ', ' . $this->faker->country()],
