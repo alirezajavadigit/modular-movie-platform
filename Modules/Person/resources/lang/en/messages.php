@@ -8,6 +8,8 @@ return [
     'show'           => 'Person retrieved successfully.',
     'created'        => 'Person created successfully.',
     'updated'        => 'Person updated successfully.',
+    'image_updated'  => 'Person image updated successfully.',
+    'image_removed'  => 'Person image removed successfully.',
     'deleted'        => 'Person deleted successfully.',
     'force_deleted'  => 'Person permanently deleted.',
     'trashed'        => 'Trashed persons retrieved successfully.',
