@@ -17,7 +17,11 @@ Route::middleware('api')->prefix('api/v1/articles')->group(function () {
     Route::get('search', [ArticleQueryController::class, 'search']);
 });
 
-Route::middleware(['api', 'auth:api',  'auto.authorize'])->prefix('api/v1/admin/articles')->group(function () {
+Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/articles')->group(function () {
+    Route::get('drafts', [ArticleQueryController::class, 'drafts']);
+    Route::get('archived', [ArticleQueryController::class, 'archived']);
+    Route::get('status/{status}', [ArticleQueryController::class, 'byStatus']);
+    Route::get('trashed', [ArticleTrashedController::class, 'index']);
 
     Route::get('/', [ArticleController::class, 'index']);
     Route::post('/', [ArticleController::class, 'store']);
@@ -25,15 +29,9 @@ Route::middleware(['api', 'auth:api',  'auto.authorize'])->prefix('api/v1/admin/
     Route::put('{article}', [ArticleController::class, 'update']);
     Route::delete('{article}', [ArticleController::class, 'destroy']);
 
-    Route::get('drafts', [ArticleQueryController::class, 'drafts']);
-    Route::get('archived', [ArticleQueryController::class, 'archived']);
-    Route::get('status/{status}', [ArticleQueryController::class, 'byStatus']);
-
     Route::patch('{article}/publish', [ArticleStatusController::class, 'publish']);
     Route::patch('{article}/archive', [ArticleStatusController::class, 'archive']);
     Route::patch('{article}/draft', [ArticleStatusController::class, 'markAsDraft']);
-
-    Route::get('trashed', [ArticleTrashedController::class, 'trashed']);
     Route::patch('{article}/restore', [ArticleTrashedController::class, 'restore']);
     Route::delete('{article}/force-delete', [ArticleTrashedController::class, 'forceDelete']);
 });

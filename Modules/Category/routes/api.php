@@ -16,13 +16,14 @@ Route::middleware('api')->prefix('api/v1/categories')->group(function () {
 });
 
 Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/categories')->group(function () {
+    Route::get('trashed', [CategoryTrashedController::class, 'index']);
+    Route::patch('{category}/restore', [CategoryTrashedController::class, 'restore']);
+    Route::delete('{category}/force-delete', [CategoryTrashedController::class, 'forceDelete']);
+
+
     Route::get('/', [CategoryController::class, 'index']);
     Route::post('/', [CategoryController::class, 'store']);
     Route::get('{category}', [CategoryController::class, 'show']);
     Route::put('{category}', [CategoryController::class, 'update']);
     Route::delete('{category}', [CategoryController::class, 'destroy']);
-
-    Route::get('trashed', [CategoryTrashedController::class, 'index']);
-    Route::patch('{category}/restore', [CategoryTrashedController::class, 'restore']);
-    Route::delete('{category}/force-delete', [CategoryTrashedController::class, 'forceDelete']);
 });
