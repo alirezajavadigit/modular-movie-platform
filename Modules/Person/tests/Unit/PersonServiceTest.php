@@ -50,7 +50,6 @@ class PersonServiceTest extends TestCase
             'lastName'  => ['en' => 'Doe'],
             'slug'      => 'john-doe',
             'biography' => null,
-            'imagePath' => null,
             'dateOfBirth' => null,
             'dateOfDeath' => null,
             'placeOfBirth' => null,
@@ -65,7 +64,6 @@ class PersonServiceTest extends TestCase
             lastName: $d['lastName'],
             slug: $d['slug'],
             biography: $d['biography'],
-            imagePath: $d['imagePath'],
             dateOfBirth: $d['dateOfBirth'],
             dateOfDeath: $d['dateOfDeath'],
             placeOfBirth: $d['placeOfBirth'],
@@ -83,7 +81,6 @@ class PersonServiceTest extends TestCase
             'lastName' => null,
             'slug' => null,
             'biography' => null,
-            'imagePath' => null,
             'dateOfBirth' => null,
             'dateOfDeath' => null,
             'placeOfBirth' => null,
@@ -98,7 +95,6 @@ class PersonServiceTest extends TestCase
             lastName: $d['lastName'],
             slug: $d['slug'],
             biography: $d['biography'],
-            imagePath: $d['imagePath'],
             dateOfBirth: $d['dateOfBirth'],
             dateOfDeath: $d['dateOfDeath'],
             placeOfBirth: $d['placeOfBirth'],
@@ -148,7 +144,7 @@ class PersonServiceTest extends TestCase
         $this->repository->shouldReceive('create')->once()->andReturn($person);
 
         DB::shouldReceive('transaction')->once()->andReturnUsing(fn($cb) => $cb());
-        $person->shouldReceive('refresh')->once()->andReturnSelf();
+        $person->shouldReceive('refresh')->twice()->andReturnSelf();
 
         $this->assertSame($person, $this->service->store($dto));
     }

@@ -8,18 +8,21 @@ use Modules\Person\DTOs\CreatePersonDTO;
 use Modules\Person\DTOs\UpdatePersonDTO;
 use Modules\Person\Models\Person;
 use Modules\Person\Repositories\PersonRepository;
+use Modules\Person\Tests\Concerns\LoadsMediaLibrary;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PersonRepositoryTest extends TestCase
 {
     use RefreshDatabase;
+    use LoadsMediaLibrary;
 
     private PersonRepository $repository;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->loadMediaLibraryMigration();
         $this->repository = new PersonRepository(new Person());
     }
 
@@ -106,7 +109,6 @@ class PersonRepositoryTest extends TestCase
             lastName: ['en' => 'Nolan'],
             slug: 'christopher-nolan',
             biography: ['en' => 'Director'],
-            imagePath: null,
             dateOfBirth: '1970-07-30',
             dateOfDeath: null,
             placeOfBirth: ['en' => 'London'],
@@ -131,7 +133,6 @@ class PersonRepositoryTest extends TestCase
             lastName: null,
             slug: null,
             biography: null,
-            imagePath: null,
             dateOfBirth: null,
             dateOfDeath: null,
             placeOfBirth: null,
