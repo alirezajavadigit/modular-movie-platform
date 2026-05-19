@@ -13,6 +13,7 @@ use Modules\Person\DTOs\CreatePersonDTO;
 use Modules\Person\DTOs\UpdatePersonDTO;
 use Modules\Person\Http\Requests\StorePersonRequest;
 use Modules\Person\Http\Requests\UpdatePersonRequest;
+use Modules\Person\Http\Requests\UploadPersonImageRequest;
 use Modules\Person\Http\Resources\Transformers\PersonTransformer;
 
 class PersonController extends Controller
@@ -43,7 +44,6 @@ class PersonController extends Controller
             lastName: $data['last_name'],
             slug: $data['slug'],
             biography: $data['biography'] ?? null,
-            imagePath: $data['image_path'] ?? null,
             dateOfBirth: $data['date_of_birth'] ?? null,
             dateOfDeath: $data['date_of_death'] ?? null,
             placeOfBirth: $data['place_of_birth'] ?? null,
@@ -53,7 +53,7 @@ class PersonController extends Controller
             isActive: (bool) ($data['is_active'] ?? true),
         );
 
-        $person = $this->service->store($dto);
+        $person = $this->service->store($dto, $request->file('image'));
 
         return ApiResponse::fractalCreated(
             $person,
@@ -82,7 +82,6 @@ class PersonController extends Controller
             lastName: $data['last_name'] ?? null,
             slug: $data['slug'] ?? null,
             biography: array_key_exists('biography', $data) ? $data['biography'] : null,
-            imagePath: $data['image_path'] ?? null,
             dateOfBirth: $data['date_of_birth'] ?? null,
             dateOfDeath: $data['date_of_death'] ?? null,
             placeOfBirth: array_key_exists('place_of_birth', $data) ? $data['place_of_birth'] : null,
@@ -92,7 +91,7 @@ class PersonController extends Controller
             isActive: isset($data['is_active']) ? (bool) $data['is_active'] : null,
         );
 
-        $person = $this->service->update($id, $dto);
+        $person = $this->service->update($id, $dto, $request->file('image'));
 
         return ApiResponse::fractal(
             $person,
@@ -106,5 +105,27 @@ class PersonController extends Controller
         $this->service->delete($id);
 
         return ApiResponse::noContent(__('person::messages.deleted'));
+    }
+
+    public function uploadImage(UploadPersonImageRequest $request, int $id): JsonResponse
+    {
+        $person = $this->service->setImage($id, $request->file('image'));
+
+        return ApiResponse::fractal(
+            $person,
+            $this->transformer,
+            __('person::messages.image_updated'),
+        );
+    }
+
+    public function deleteImage(int $id): JsonResponse
+    {
+        $person = $this->service->removeImage($id);
+
+        return ApiResponse::fractal(
+            $person,
+            $this->transformer,
+            __('person::messages.image_removed'),
+        );
     }
 }

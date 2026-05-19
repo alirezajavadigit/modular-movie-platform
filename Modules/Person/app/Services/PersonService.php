@@ -4,6 +4,7 @@ namespace Modules\Person\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use LogicException;
@@ -82,7 +83,7 @@ final class PersonService implements PersonServiceInterface
         return $this->repository->search($query, $perPage);
     }
 
-    public function store(CreatePersonDTO $dto): Person
+    public function store(CreatePersonDTO $dto, ?UploadedFile $image = null): Person
     {
         if (empty($dto->firstName)) {
             throw new InvalidArgumentException('First name is required.');
@@ -98,16 +99,26 @@ final class PersonService implements PersonServiceInterface
             throw new LogicException('A person with this slug already exists.');
         }
 
-        return DB::transaction(function () use ($dto): Person {
+        if (!is_null($image) && !$image->isValid()) {
+            throw new InvalidArgumentException('Uploaded image is not valid.');
+        }
+
+        $person = DB::transaction(function () use ($dto): Person {
             $person = $this->repository->create($dto);
             if (!$person) {
                 throw new RuntimeException('Failed to create person.');
             }
             return $person->refresh();
         });
+
+        if (!is_null($image)) {
+            $person->addMedia($image)->toMediaCollection('avatar');
+        }
+
+        return $person->refresh();
     }
 
-    public function update(int $id, UpdatePersonDTO $dto): Person
+    public function update(int $id, UpdatePersonDTO $dto, ?UploadedFile $image = null): Person
     {
         if ($id <= 0) {
             throw new InvalidArgumentException('Person ID must be a positive integer.');
@@ -131,13 +142,52 @@ final class PersonService implements PersonServiceInterface
             }
         }
 
-        return DB::transaction(function () use ($id, $dto): Person {
+        $person = DB::transaction(function () use ($id, $dto): Person {
             $person = $this->repository->update($id, $dto);
             if (!$person) {
                 throw new RuntimeException("Failed to update person with ID {$id}.");
             }
             return $person->refresh();
         });
+        if (!is_null($image)) {
+            $person->addMedia($image)->toMediaCollection('avatar');
+        }
+        return $person->refresh();
+    }
+
+    public function setImage(int $id, UploadedFile $image): Person
+    {
+        if ($id <= 0) {
+            throw new InvalidArgumentException('Person ID must be a positive integer.');
+        }
+        if (!$image->isValid()) {
+            throw new InvalidArgumentException('Uploaded image is not valid.');
+        }
+
+        $person = $this->repository->findById($id);
+        if (!$person) {
+            throw new InvalidArgumentException("Person with ID {$id} not found.");
+        }
+
+        $person->addMedia($image)->toMediaCollection('avatar');
+
+        return $person->refresh();
+    }
+
+    public function removeImage(int $id): Person
+    {
+        if ($id <= 0) {
+            throw new InvalidArgumentException('Person ID must be a positive integer.');
+        }
+
+        $person = $this->repository->findById($id);
+        if (!$person) {
+            throw new InvalidArgumentException("Person with ID {$id} not found.");
+        }
+
+        $person->clearMediaCollection('avatar');
+
+        return $person->refresh();
     }
 
     public function delete(int $id): bool

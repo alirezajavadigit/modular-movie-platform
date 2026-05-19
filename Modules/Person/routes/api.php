@@ -24,15 +24,18 @@ Route::middleware('api')->prefix('api/v1/credits')->group(function () {
 });
 
 Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/persons')->group(function () {
+    Route::post('{person}/image', [PersonController::class, 'uploadImage']);
+    Route::delete('{person}/image', [PersonController::class, 'deleteImage']);
+
+    Route::get('trashed', [PersonTrashedController::class, 'index']);
+    Route::patch('{person}/restore', [PersonTrashedController::class, 'restore']);
+    Route::delete('{person}/force-delete', [PersonTrashedController::class, 'forceDelete']);
+
     Route::get('/', [PersonController::class, 'index']);
     Route::post('/', [PersonController::class, 'store']);
     Route::get('{person}', [PersonController::class, 'show']);
     Route::put('{person}', [PersonController::class, 'update']);
     Route::delete('{person}', [PersonController::class, 'destroy']);
-
-    Route::get('trashed', [PersonTrashedController::class, 'index']);
-    Route::patch('{person}/restore', [PersonTrashedController::class, 'restore']);
-    Route::delete('{person}/force-delete', [PersonTrashedController::class, 'forceDelete']);
 });
 
 Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/credits')->group(function () {
