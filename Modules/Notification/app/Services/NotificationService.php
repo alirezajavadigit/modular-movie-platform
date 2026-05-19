@@ -4,7 +4,6 @@ namespace Modules\Notification\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use LogicException;
@@ -162,6 +161,7 @@ final class NotificationService implements NotificationServiceInterface
 
     public function markAllAsRead(string $notifiableType, int $notifiableId): bool
     {
+        $notifiableType = $this->resolveNotifiableType($notifiableType);
         $this->assertNotifiableTypeIsRegistered($notifiableType);
 
         if ($notifiableId <= 0) {
@@ -175,6 +175,7 @@ final class NotificationService implements NotificationServiceInterface
 
     public function getForNotifiable(string $notifiableType, int $notifiableId, int $perPage = 15): LengthAwarePaginator
     {
+        $notifiableType = $this->resolveNotifiableType($notifiableType);
         $this->assertNotifiableTypeIsRegistered($notifiableType);
 
         if ($notifiableId <= 0) {
@@ -190,6 +191,7 @@ final class NotificationService implements NotificationServiceInterface
 
     public function getUnreadForNotifiable(string $notifiableType, int $notifiableId, int $perPage = 15): LengthAwarePaginator
     {
+        $notifiableType = $this->resolveNotifiableType($notifiableType);
         $this->assertNotifiableTypeIsRegistered($notifiableType);
 
         if ($notifiableId <= 0) {
@@ -216,12 +218,12 @@ final class NotificationService implements NotificationServiceInterface
 
     public function resolveNotifiableType(string $morphAlias): string
     {
-        $morphMap = Relation::morphMap();
+        $morphMap = $this->morphMap();
 
         if (!isset($morphMap[$morphAlias])) {
             throw new InvalidArgumentException(
                 "Morph alias [{$morphAlias}] is not registered in the morph map. "
-                . "Add it to config/config.php under 'morph_map'.",
+                    . "Add it to config/config.php under 'morph_map'.",
             );
         }
 
@@ -235,37 +237,40 @@ final class NotificationService implements NotificationServiceInterface
 
     private function assertTypeIsRegistered(string $type): void
     {
-        $types = config('notification-module.notification_types', []);
+        $types = $this->registeredTypes();
 
         if (!array_key_exists($type, $types)) {
             throw new InvalidArgumentException(
                 "Notification type [{$type}] is not registered. "
-                . "Add it to config/config.php under 'notification_types'.",
+                    . "Add it to config/config.php under 'notification_types'.",
             );
         }
     }
 
     private function assertChannelAllowedForType(string $type, NotificationChannel $channel): void
     {
-        $types           = config('notification-module.notification_types', []);
+        $types           = $this->registeredTypes();
         $allowedChannels = $types[$type]['channels'] ?? [];
 
         if (!in_array($channel->value, $allowedChannels, true)) {
             throw new LogicException(
                 "Channel [{$channel->value}] is not allowed for notification type [{$type}]. "
-                . "Allowed channels: " . implode(', ', $allowedChannels) . '.',
+                    . "Allowed channels: " . implode(', ', $allowedChannels) . '.',
             );
         }
     }
 
     private function assertNotifiableTypeIsRegistered(string $notifiableType): void
     {
-        $morphMap = Relation::morphMap();
-
-        if (!in_array($notifiableType, $morphMap, true) && !class_exists($notifiableType)) {
+        if (!in_array($notifiableType, $this->morphMap(), true)) {
             throw new InvalidArgumentException(
-                "Notifiable type [{$notifiableType}] is not a valid class or registered morph alias.",
+                "Notifiable type [{$notifiableType}] is not a registered morph map class.",
             );
         }
+    }
+
+    private function morphMap(): array
+    {
+        return config('notification-module.morph_map', []);
     }
 }
