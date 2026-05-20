@@ -7,13 +7,13 @@ namespace Modules\Subscription\Http\Controllers;
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Modules\Subscription\Contracts\SubscriptionPlanServiceInterface;
 use Modules\Subscription\DTOs\CreateSubscriptionPlanDTO;
 use Modules\Subscription\DTOs\UpdateSubscriptionPlanDTO;
 use Modules\Subscription\Http\Requests\StoreSubscriptionPlanRequest;
 use Modules\Subscription\Http\Requests\UpdateSubscriptionPlanRequest;
 use Modules\Subscription\Http\Resources\Transformers\SubscriptionPlanTransformer;
+use Modules\Subscription\Models\SubscriptionPlan;
 
 class SubscriptionPlanController extends Controller
 {
@@ -38,7 +38,7 @@ class SubscriptionPlanController extends Controller
         return ApiResponse::fractalCreated($plan, $this->transformer, __('subscription::messages.plan_created'));
     }
 
-    public function update(UpdateSubscriptionPlanRequest $request, int $id): JsonResponse
+    public function update(UpdateSubscriptionPlanRequest $request, SubscriptionPlan $subscriptionPlan): JsonResponse
     {
         $validated = $request->validated();
 
@@ -49,14 +49,14 @@ class SubscriptionPlanController extends Controller
             durationDays: isset($validated['duration_days']) ? (int) $validated['duration_days'] : null,
         );
 
-        $plan = $this->service->update($id, $dto);
+        $plan = $this->service->update($subscriptionPlan, $dto);
 
         return ApiResponse::fractal($plan, $this->transformer, __('subscription::messages.plan_updated'));
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(SubscriptionPlan $subscriptionPlan): JsonResponse
     {
-        $this->service->delete($id);
+        $this->service->delete($subscriptionPlan);
 
         return ApiResponse::noContent(__('subscription::messages.plan_deleted'));
     }
