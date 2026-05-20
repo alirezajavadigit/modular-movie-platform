@@ -56,10 +56,8 @@ final class SubscriptionRepository implements SubscriptionRepositoryInterface
         ]);
     }
 
-    public function update(int $id, UpdateSubscriptionDTO $dto): Subscription
+    public function update(Subscription $subscription, UpdateSubscriptionDTO $dto): Subscription
     {
-        $subscription = $this->model->newQuery()->findOrFail($id);
-
         $subscription->update(array_filter([
             'status'     => $dto->status,
             'starts_at'  => $dto->startsAt,
@@ -70,19 +68,18 @@ final class SubscriptionRepository implements SubscriptionRepositoryInterface
         return $subscription->refresh();
     }
 
-    public function delete(int $id): bool
+    public function delete(Subscription $subscription): bool
     {
-        return (bool) $this->model->newQuery()->findOrFail($id)->delete();
+        return (bool) $subscription->delete();
     }
 
-    public function forceDelete(int $id): bool
+    public function forceDelete(Subscription $subscription): bool
     {
-        return (bool) $this->model->newQuery()->withTrashed()->findOrFail($id)->forceDelete();
+        return (bool) $subscription->forceDelete();
     }
 
-    public function restore(int $id): Subscription
+    public function restore(Subscription $subscription): Subscription
     {
-        $subscription = $this->model->newQuery()->withTrashed()->findOrFail($id);
         $subscription->restore();
 
         return $subscription->refresh();

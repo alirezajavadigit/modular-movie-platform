@@ -78,7 +78,7 @@ final class SubscriptionService implements SubscriptionServiceInterface
             throw new LogicException('The selected subscription plan is not available.');
         }
 
-        return DB::transaction(function () use ($dto, $plan): string {
+        return DB::transaction(function () use ($dto): string {
             $subscription = $this->repository->create($dto);
 
             if (!$subscription) {
@@ -97,26 +97,16 @@ final class SubscriptionService implements SubscriptionServiceInterface
         });
     }
 
-    public function activate(int $id): Subscription
+    public function activate(Subscription $subscription): Subscription
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription ID must be a positive integer.');
-        }
-
-        $subscription = $this->repository->findById($id);
-
-        if (!$subscription) {
-            throw new InvalidArgumentException("Subscription with ID {$id} not found.");
-        }
-
         if (!$subscription->status->isPending()) {
             throw new LogicException('Only pending subscriptions can be activated.');
         }
 
-        return DB::transaction(function () use ($id, $subscription): Subscription {
+        return DB::transaction(function () use ($subscription): Subscription {
             $subscription->load('plan');
 
-            return $this->repository->update($id, new UpdateSubscriptionDTO(
+            return $this->repository->update($subscription, new UpdateSubscriptionDTO(
                 status:   SubscriptionStatus::ACTIVE,
                 startsAt: now(),
                 endsAt:   now()->addDays($subscription->plan->duration_days),
@@ -124,18 +114,8 @@ final class SubscriptionService implements SubscriptionServiceInterface
         });
     }
 
-    public function cancel(int $id): Subscription
+    public function cancel(Subscription $subscription): Subscription
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription ID must be a positive integer.');
-        }
-
-        $subscription = $this->repository->findById($id);
-
-        if (!$subscription) {
-            throw new InvalidArgumentException("Subscription with ID {$id} not found.");
-        }
-
         if ($subscription->status->isCanceled()) {
             throw new LogicException('Subscription is already canceled.');
         }
@@ -144,42 +124,24 @@ final class SubscriptionService implements SubscriptionServiceInterface
             throw new LogicException('Expired subscriptions cannot be canceled.');
         }
 
-        return DB::transaction(fn(): Subscription => $this->repository->update($id, new UpdateSubscriptionDTO(
+        return DB::transaction(fn(): Subscription => $this->repository->update($subscription, new UpdateSubscriptionDTO(
             status: SubscriptionStatus::CANCELED,
         )));
     }
 
-    public function delete(int $id): bool
+    public function delete(Subscription $subscription): bool
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription ID must be a positive integer.');
-        }
-
-        $subscription = $this->repository->findById($id);
-
-        if (!$subscription) {
-            throw new InvalidArgumentException("Subscription with ID {$id} not found.");
-        }
-
-        return DB::transaction(fn(): bool => $this->repository->delete($id));
+        return DB::transaction(fn(): bool => $this->repository->delete($subscription));
     }
 
-    public function forceDelete(int $id): bool
+    public function forceDelete(Subscription $subscription): bool
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription ID must be a positive integer.');
-        }
-
-        return DB::transaction(fn(): bool => $this->repository->forceDelete($id));
+        return DB::transaction(fn(): bool => $this->repository->forceDelete($subscription));
     }
 
-    public function restore(int $id): Subscription
+    public function restore(Subscription $subscription): Subscription
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription ID must be a positive integer.');
-        }
-
-        return DB::transaction(fn(): Subscription => $this->repository->restore($id));
+        return DB::transaction(fn(): Subscription => $this->repository->restore($subscription));
     }
 
     public function getTrashed(int $perPage = 15): LengthAwarePaginator
