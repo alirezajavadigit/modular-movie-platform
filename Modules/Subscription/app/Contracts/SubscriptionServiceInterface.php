@@ -14,10 +14,10 @@ interface SubscriptionServiceInterface
     public function getAllForUser(int $userId): Collection;
     public function paginateForUser(int $userId, int $perPage = 15): LengthAwarePaginator;
     public function subscribe(CreateSubscriptionDTO $dto): string;
-    public function activate(int $id): Subscription;
-    public function cancel(int $id): Subscription;
-    public function delete(int $id): bool;
-    public function forceDelete(int $id): bool;
-    public function restore(int $id): Subscription;
+    public function activate(Subscription $subscription): Subscription;
+    public function cancel(Subscription $subscription): Subscription;
+    public function delete(Subscription $subscription): bool;
+    public function forceDelete(Subscription $subscription): bool;
+    public function restore(Subscription $subscription): Subscription;
     public function getTrashed(int $perPage = 15): LengthAwarePaginator;
 }
