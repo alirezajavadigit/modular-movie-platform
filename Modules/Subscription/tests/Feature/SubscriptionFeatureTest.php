@@ -5,6 +5,7 @@ namespace Modules\Subscription\Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Mockery;
 use Modules\Auth\Models\User;
 use Modules\Subscription\Contracts\SubscriptionPlanRepositoryInterface;
@@ -35,6 +36,8 @@ class SubscriptionFeatureTest extends TestCase
         parent::setUp();
 
         $this->app['router']->group(['middleware' => 'api'], __DIR__ . '/../../routes/api.php');
+
+        Route::bind('subscription', fn(string $value) => Subscription::withTrashed()->findOrFail($value));
 
         $this->app->bind(SubscriptionRepositoryInterface::class, SubscriptionRepository::class);
         $this->app->bind(SubscriptionPlanRepositoryInterface::class, SubscriptionPlanRepository::class);
@@ -105,18 +108,43 @@ class SubscriptionFeatureTest extends TestCase
         ])->assertOk();
     }
 
-    public function test_cancel_cancels_subscription(): void
+    public function test_cancel_cancels_own_subscription(): void
     {
         $user = User::factory()->create();
 
+        Permission::firstOrCreate(['name' => 'subscriptions.cancel', 'guard_name' => 'api']);
+
         $this->actingAs($user, 'api');
 
-        $subscription = Subscription::factory()->make(['id' => 1, 'user_id' => $user->id, 'plan_id' => 1]);
+        $plan         = SubscriptionPlan::factory()->create();
+        $subscription = Subscription::factory()->create([
+            'user_id' => $user->id,
+            'plan_id' => $plan->id,
+        ]);
 
-        $this->service->shouldReceive('cancel')->with(1)->once()->andReturn($subscription);
+        $this->service->shouldReceive('cancel')->once()->andReturn($subscription);
 
-        $this->patchJson('api/v1/subscriptions/1/cancel')
+        $this->patchJson("api/v1/subscriptions/{$subscription->id}/cancel")
             ->assertOk();
+    }
+
+    public function test_cancel_is_forbidden_for_other_users_subscription(): void
+    {
+        $owner  = User::factory()->create();
+        $intruder = User::factory()->create();
+
+        Permission::firstOrCreate(['name' => 'subscriptions.cancel', 'guard_name' => 'api']);
+
+        $this->actingAs($intruder, 'api');
+
+        $plan         = SubscriptionPlan::factory()->create();
+        $subscription = Subscription::factory()->create([
+            'user_id' => $owner->id,
+            'plan_id' => $plan->id,
+        ]);
+
+        $this->patchJson("api/v1/subscriptions/{$subscription->id}/cancel")
+            ->assertForbidden();
     }
 
     public function test_admin_destroy_deletes_subscription(): void
@@ -134,7 +162,7 @@ class SubscriptionFeatureTest extends TestCase
             'plan_id' => $plan->id,
         ]);
 
-        $this->service->shouldReceive('delete')->with($subscription->id)->once()->andReturn(true);
+        $this->service->shouldReceive('delete')->once()->andReturn(true);
 
         $this->deleteJson("api/v1/admin/subscriptions/{$subscription->id}")
             ->assertNoContent();

@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
 use LogicException;
 use Mockery;
-use Modules\Auth\Models\User;
 use Modules\Payment\Contracts\PaymentServiceInterface;
 use Modules\Subscription\Contracts\SubscriptionPlanRepositoryInterface;
 use Modules\Subscription\Contracts\SubscriptionRepositoryInterface;
@@ -88,34 +87,31 @@ class SubscriptionServiceTest extends TestCase
         ));
     }
 
-    public function test_cancel_throws_when_subscription_not_found(): void
-    {
-        $this->subscriptionRepo->shouldReceive('findById')->with(1)->once()->andReturn(null);
-
-        $this->expectException(InvalidArgumentException::class);
-
-        $this->service->cancel(1);
-    }
-
     public function test_cancel_throws_when_subscription_already_canceled(): void
     {
-        $subscription = Subscription::factory()->make(['id' => 1, 'user_id' => 1, 'plan_id' => 1, 'status' => SubscriptionStatus::CANCELED]);
-
-        $this->subscriptionRepo->shouldReceive('findById')->with(1)->once()->andReturn($subscription);
+        $subscription = Subscription::factory()->make([
+            'id'      => 1,
+            'user_id' => 1,
+            'plan_id' => 1,
+            'status'  => SubscriptionStatus::CANCELED,
+        ]);
 
         $this->expectException(LogicException::class);
 
-        $this->service->cancel(1);
+        $this->service->cancel($subscription);
     }
 
     public function test_activate_throws_when_subscription_not_pending(): void
     {
-        $subscription = Subscription::factory()->make(['id' => 1, 'user_id' => 1, 'plan_id' => 1, 'status' => SubscriptionStatus::ACTIVE]);
-
-        $this->subscriptionRepo->shouldReceive('findById')->with(1)->once()->andReturn($subscription);
+        $subscription = Subscription::factory()->make([
+            'id'      => 1,
+            'user_id' => 1,
+            'plan_id' => 1,
+            'status'  => SubscriptionStatus::ACTIVE,
+        ]);
 
         $this->expectException(LogicException::class);
 
-        $this->service->activate(1);
+        $this->service->activate($subscription);
     }
 }

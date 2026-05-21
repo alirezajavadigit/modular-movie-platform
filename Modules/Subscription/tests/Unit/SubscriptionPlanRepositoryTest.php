@@ -76,7 +76,7 @@ class SubscriptionPlanRepositoryTest extends TestCase
     {
         $plan = SubscriptionPlan::factory()->create();
 
-        $this->repository->delete($plan->id);
+        $this->repository->delete($plan);
 
         $this->assertSoftDeleted('subscription_plans', ['id' => $plan->id]);
     }

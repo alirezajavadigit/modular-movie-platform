@@ -72,8 +72,8 @@ class SubscriptionRepositoryTest extends TestCase
 
     public function test_get_all_for_user_returns_only_user_subscriptions(): void
     {
-        $plan       = SubscriptionPlan::factory()->create();
-        $otherUser  = User::factory()->create();
+        $plan      = SubscriptionPlan::factory()->create();
+        $otherUser = User::factory()->create();
 
         Subscription::factory()->count(2)->create(['user_id' => $this->user->id, 'plan_id' => $plan->id]);
         Subscription::factory()->count(3)->create(['user_id' => $otherUser->id, 'plan_id' => $plan->id]);
@@ -92,7 +92,7 @@ class SubscriptionRepositoryTest extends TestCase
             'plan_id' => $plan->id,
         ]);
 
-        $this->repository->delete($subscription->id);
+        $this->repository->delete($subscription);
 
         $this->assertSoftDeleted('subscriptions', ['id' => $subscription->id]);
     }
