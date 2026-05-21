@@ -52,7 +52,15 @@ class SubscriptionServiceProvider extends ModuleServiceProvider
         Gate::policy(Subscription::class, SubscriptionPolicy::class);
         Gate::policy(SubscriptionPlan::class, SubscriptionPlanPolicy::class);
 
+        $this->registerRouteModelBindings();
+
         Route::middleware('api')
             ->group(module_path('Subscription', '/routes/api.php'));
+    }
+
+    private function registerRouteModelBindings(): void
+    {
+        Route::bind('subscription', fn(string $value) => Subscription::withTrashed()->findOrFail($value));
+        Route::bind('subscriptionPlan', fn(string $value) => SubscriptionPlan::withTrashed()->findOrFail($value));
     }
 }
