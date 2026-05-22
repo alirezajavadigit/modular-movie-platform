@@ -9,8 +9,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "spatie/laravel-permission": "^6.25",
-        "alirezajavadi/auth": "*"
+        "spatie/laravel-permission": "^6.25"
     },
     "extra": {
         "laravel": {

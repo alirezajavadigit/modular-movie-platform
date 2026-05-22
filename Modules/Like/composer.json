@@ -8,8 +8,7 @@
         }
     ],
     "require": {
-        "php": "^8.2",
-        "alirezajavadi/authorization": "*"
+        "php": "^8.2"
     },
     "extra": {
         "laravel": {

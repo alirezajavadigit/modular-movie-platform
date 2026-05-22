@@ -9,7 +9,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "alirezajavadi/authorization": "*"
+        "spatie/laravel-medialibrary": "^11.21"
     },
     "extra": {
         "laravel": {
