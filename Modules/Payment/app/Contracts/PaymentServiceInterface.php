@@ -15,6 +15,7 @@ interface PaymentServiceInterface
     public function getAllRelatedToUser(int $userId): Collection;
     public function request(CreatePaymentDTO $dto): string;
     public function verify(UpdatePaymentDTO $dto): Payment;
+    public function callback(string $driver, array $payload): Payment;
     public function delete(int $id): bool;
     public function forceDelete(int $id): bool;
     public function restore(int $id): Payment;
