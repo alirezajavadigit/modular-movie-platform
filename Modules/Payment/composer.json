@@ -9,7 +9,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "alirezajavadi/authorization": "*"
+        "zarinpal/zarinpal-php-sdk": "^1.0"
     },
     "extra": {
         "laravel": {
