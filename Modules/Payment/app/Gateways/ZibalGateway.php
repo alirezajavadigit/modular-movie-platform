@@ -5,6 +5,7 @@ namespace Modules\Payment\Gateways;
 use Illuminate\Support\Facades\Http;
 use Modules\Payment\Contracts\GatewayInterface;
 use Modules\Payment\DTOs\CreatePaymentDTO;
+use Modules\Payment\DTOs\PurchaseResultDTO;
 use RuntimeException;
 
 final class ZibalGateway implements GatewayInterface
@@ -21,13 +22,13 @@ final class ZibalGateway implements GatewayInterface
         $this->callbackUrl = config('payment-module.gateways.zibal.callback_url', '');
     }
 
-    public function purchase(CreatePaymentDTO $dto): string
+    public function purchase(CreatePaymentDTO $paymentDTO): PurchaseResultDTO
     {
         $response = Http::post($this->requestEndpoint, [
             'merchant'    => $this->merchant,
-            'amount'      => (int) ($dto->payable->getPayableAmount() * 10),
+            'amount'      => (int) ($paymentDTO->payable->getPayableAmount() * 10),
             'callbackUrl' => $this->callbackUrl,
-            'description' => $dto->payable->getPayableDescription(),
+            'description' => $paymentDTO->payable->getPayableDescription(),
         ]);
 
         $data = $response->json();
@@ -36,10 +37,10 @@ final class ZibalGateway implements GatewayInterface
             throw new RuntimeException('Zibal payment request failed: ' . ($data['message'] ?? 'Unknown error'));
         }
 
-        return $this->startEndpoint . $data['trackId'];
+        return new PurchaseResultDTO($this->startEndpoint . $data['trackId'], (string) $data['trackId']);
     }
 
-    public function verify(string $transactionId): bool
+    public function verify(string $transactionId, float $amount = 0.0): bool
     {
         $response = Http::post($this->verifyEndpoint, [
             'merchant' => $this->merchant,

@@ -5,6 +5,7 @@ namespace Modules\Payment\Gateways;
 use Illuminate\Support\Facades\Http;
 use Modules\Payment\Contracts\GatewayInterface;
 use Modules\Payment\DTOs\CreatePaymentDTO;
+use Modules\Payment\DTOs\PurchaseResultDTO;
 use RuntimeException;
 
 final class PayPalGateway implements GatewayInterface
@@ -26,7 +27,7 @@ final class PayPalGateway implements GatewayInterface
             : 'https://api-m.sandbox.paypal.com';
     }
 
-    public function purchase(CreatePaymentDTO $dto): string
+    public function purchase(CreatePaymentDTO $paymentDTO): PurchaseResultDTO
     {
         $token = $this->getAccessToken();
 
@@ -37,9 +38,9 @@ final class PayPalGateway implements GatewayInterface
                     [
                         'amount' => [
                             'currency_code' => 'USD',
-                            'value'         => number_format($dto->payable->getPayableAmount(), 2, '.', ''),
+                            'value'         => number_format($paymentDTO->payable->getPayableAmount(), 2, '.', ''),
                         ],
-                        'description' => $dto->payable->getPayableDescription(),
+                        'description' => $paymentDTO->payable->getPayableDescription(),
                     ],
                 ],
                 'application_context' => [
@@ -60,10 +61,10 @@ final class PayPalGateway implements GatewayInterface
             throw new RuntimeException('PayPal approval link not found in response.');
         }
 
-        return $approvalLink['href'];
+        return new PurchaseResultDTO($approvalLink['href'], (string) $data['id']);
     }
 
-    public function verify(string $transactionId): bool
+    public function verify(string $transactionId, float $amount = 0.0): bool
     {
         $token = $this->getAccessToken();
 
