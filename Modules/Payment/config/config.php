@@ -3,6 +3,8 @@
 return [
     'name' => 'Payment',
 
+    'frontend_redirect_url' => env('PAYMENT_FRONTEND_REDIRECT_URL', ''),
+
     'gateways' => [
         'zibal' => [
             'merchant'     => env('ZIBAL_MERCHANT', ''),
@@ -12,6 +14,7 @@ return [
         'zarinpal' => [
             'merchant_id'  => env('ZARINPAL_MERCHANT_ID', ''),
             'callback_url' => env('ZARINPAL_CALLBACK_URL', ''),
+            'sandbox'      => (bool) env('ZARINPAL_SANDBOX', false),
         ],
 
         'paypal' => [
