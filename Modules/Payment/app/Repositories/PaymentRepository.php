@@ -20,6 +20,11 @@ final class PaymentRepository implements PaymentRepositoryInterface
         return $this->model->newQuery()->find($id);
     }
 
+    public function findByTransactionId(string $transactionId): ?Payment
+    {
+        return $this->model->newQuery()->where('transaction_id', $transactionId)->latest()->first();
+    }
+
     public function getAll(): Collection
     {
         return $this->model->newQuery()->latest()->get();
