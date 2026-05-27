@@ -7,9 +7,11 @@ namespace Modules\Subscription\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Auth\Models\User;
 use Modules\Payment\Contracts\PayableInterface;
+use Modules\Payment\Models\Payment;
 use Modules\Subscription\Database\Factories\SubscriptionFactory;
 use Modules\Subscription\Enums\SubscriptionStatus;
 
@@ -49,6 +51,39 @@ class Subscription extends Model implements PayableInterface
     public function plan(): BelongsTo
     {
         return $this->belongsTo(SubscriptionPlan::class, 'plan_id');
+    }
+
+    public function payment(): MorphOne
+    {
+        return $this->morphOne(Payment::class, 'payable');
+    }
+
+    public function activate(int $paymentId): void
+    {
+        if ($this->status === SubscriptionStatus::ACTIVE) {
+            return;
+        }
+
+        $startsAt = now();
+
+        $this->update([
+            'payment_id' => $paymentId,
+            'status'     => SubscriptionStatus::ACTIVE,
+            'starts_at'  => $startsAt,
+            'ends_at'    => $startsAt->copy()->addDays((int) $this->plan->duration_days),
+        ]);
+    }
+
+    public function markPaymentFailed(int $paymentId): void
+    {
+        if ($this->status === SubscriptionStatus::ACTIVE) {
+            return;
+        }
+
+        $this->update([
+            'payment_id' => $paymentId,
+            'status'     => SubscriptionStatus::CANCELED,
+        ]);
     }
 
     public function getPayableId(): int|string
