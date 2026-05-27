@@ -75,7 +75,6 @@ class MovieController extends Controller
     {
         $movie = $this->movieService->getMovieById($id);
         $poster = $this->resolvePoster($request);
-
         if ($poster && $movie->poster && $poster !== $movie->poster) {
             $this->fileUploadService->delete($movie->poster);
         }
