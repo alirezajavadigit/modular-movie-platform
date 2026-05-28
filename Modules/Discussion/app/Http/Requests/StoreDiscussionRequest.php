@@ -36,7 +36,7 @@ class StoreDiscussionRequest extends FormRequest
         $alias = $this->input('discussionable_type');
 
         if (! array_key_exists($alias, $map)) {
-            abort(422, __('discussion-module::messages.invalid_discussionable_type'));
+            abort(422, __('discussion::messages.invalid_discussionable_type'));
         }
 
         return $map[$alias];
@@ -47,8 +47,8 @@ class StoreDiscussionRequest extends FormRequest
         throw new HttpResponseException(
             ApiResponse::validationError(
                 $validator->errors(),
-                __('discussion-module::messages.validation_failed')
-            )
+                __('discussion::messages.validation_failed'),
+            ),
         );
     }
 }

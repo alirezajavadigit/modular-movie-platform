@@ -32,8 +32,8 @@ class UpdateDiscussionRequest extends FormRequest
         throw new HttpResponseException(
             ApiResponse::validationError(
                 $validator->errors(),
-                __('discussion-module::messages.validation_failed')
-            )
+                __('discussion::messages.validation_failed'),
+            ),
         );
     }
 }
