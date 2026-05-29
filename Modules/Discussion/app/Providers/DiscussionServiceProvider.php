@@ -2,78 +2,50 @@
 
 namespace Modules\Discussion\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Modules\Discussion\Contracts\DiscussionRepositoryInterface;
 use Modules\Discussion\Contracts\DiscussionServiceInterface;
+use Modules\Discussion\Models\Discussion;
+use Modules\Discussion\Policies\DiscussionPolicy;
 use Modules\Discussion\Repositories\DiscussionRepository;
 use Modules\Discussion\Services\DiscussionService;
+use Nwidart\Modules\Support\ModuleServiceProvider;
 
-class DiscussionServiceProvider extends ServiceProvider
+class DiscussionServiceProvider extends ModuleServiceProvider
 {
-    protected string $moduleName = 'Discussion';
+    protected string $name = 'Discussion';
 
-    protected string $moduleNameLower = 'discussion';
+    protected string $nameLower = 'discussion';
+
+    protected array $providers = [
+        EventServiceProvider::class,
+    ];
 
     public function register(): void
     {
-        $this->app->register(EventServiceProvider::class);
-        $this->app->register(RouteServiceProvider::class);
-        $this->app->register(AuthServiceProvider::class);
-
-        $this->registerConfig();
-        $this->registerBindings();
-    }
-
-    public function boot(): void
-    {
-        $this->registerTranslations();
-        $this->registerMigrations();
-    }
-
-    protected function registerConfig(): void
-    {
-        $this->publishes([
-            module_path($this->moduleName, 'config/config.php') => config_path($this->moduleNameLower . '-module.php'),
-        ], 'discussion-module-config');
+        parent::register();
 
         $this->mergeConfigFrom(
-            module_path($this->moduleName, 'config/config.php'),
-            $this->moduleNameLower . '-module'
+            module_path('Discussion', 'config/config.php'),
+            'discussion-module',
         );
-    }
 
-    protected function registerBindings(): void
-    {
+        $this->loadMigrationsFrom(module_path('Discussion', 'database/migrations'));
+
         $this->app->bind(DiscussionRepositoryInterface::class, DiscussionRepository::class);
         $this->app->bind(DiscussionServiceInterface::class, DiscussionService::class);
     }
 
-    protected function registerTranslations(): void
+    public function boot(): void
     {
-        $langPath = resource_path('lang/modules/' . $this->moduleNameLower);
+        parent::boot();
 
-        if (is_dir($langPath)) {
-            $this->loadTranslationsFrom($langPath, $this->moduleNameLower . '-module');
-            $this->loadJsonTranslationsFrom($langPath);
-        } else {
-            $this->loadTranslationsFrom(
-                module_path($this->moduleName, 'resources/lang'),
-                $this->moduleNameLower . '-module'
-            );
-            $this->loadJsonTranslationsFrom(module_path($this->moduleName, 'resources/lang'));
-        }
-    }
+        $this->loadTranslationsFrom(module_path('Discussion', 'resources/lang'), 'discussion');
 
-    protected function registerMigrations(): void
-    {
-        $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
-    }
+        Gate::policy(Discussion::class, DiscussionPolicy::class);
 
-    public function provides(): array
-    {
-        return [
-            DiscussionRepositoryInterface::class,
-            DiscussionServiceInterface::class,
-        ];
+        Route::middleware('api')
+            ->group(module_path('Discussion', '/routes/api.php'));
     }
 }
