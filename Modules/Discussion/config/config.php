@@ -3,17 +3,15 @@
 return [
     'name' => 'Discussion',
 
-    'pagination' => [
-        'per_page' => 15,
-    ],
+    'per_page' => 15,
+
+    'auto_approve' => false,
 
     'discussionable_types' => [
         'movie'   => \Modules\Movie\Models\Movie::class,
         'episode' => \Modules\Movie\Models\Episode::class,
         'article' => \Modules\Article\Models\Article::class,
     ],
-
-    'auto_approve' => false,
 
     'body' => [
         'min' => 3,
