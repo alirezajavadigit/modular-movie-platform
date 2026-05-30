@@ -4,6 +4,7 @@ namespace Modules\Discussion\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Mockery;
 use Modules\Discussion\Contracts\DiscussionRepositoryInterface;
 use Modules\Discussion\DTOs\CreateDiscussionDTO;
@@ -120,6 +121,8 @@ class DiscussionServiceTest extends TestCase
             ])
             ->once()->andReturn($discussion);
 
+        DB::shouldReceive('transaction')->once()->andReturnUsing(fn ($cb) => $cb());
+
         $this->assertSame($discussion, $this->service->store($dto));
     }
 
@@ -133,6 +136,8 @@ class DiscussionServiceTest extends TestCase
                 'body'   => 'Updated body',
                 'status' => DiscussionStatus::APPROVED->value,
             ])->once()->andReturn(true);
+
+        DB::shouldReceive('transaction')->once()->andReturnUsing(fn ($cb) => $cb());
 
         $this->assertTrue($this->service->update($discussion, $dto));
     }
@@ -152,6 +157,8 @@ class DiscussionServiceTest extends TestCase
         $discussion = Mockery::mock(Discussion::class);
         $this->repository->shouldReceive('delete')->with($discussion)->once()->andReturn(true);
 
+        DB::shouldReceive('transaction')->once()->andReturnUsing(fn ($cb) => $cb());
+
         $this->assertTrue($this->service->delete($discussion));
     }
 
@@ -160,6 +167,8 @@ class DiscussionServiceTest extends TestCase
         $discussion = Mockery::mock(Discussion::class);
         $this->repository->shouldReceive('forceDelete')->with($discussion)->once()->andReturn(true);
 
+        DB::shouldReceive('transaction')->once()->andReturnUsing(fn ($cb) => $cb());
+
         $this->assertTrue($this->service->forceDelete($discussion));
     }
 
@@ -167,6 +176,8 @@ class DiscussionServiceTest extends TestCase
     {
         $discussion = Mockery::mock(Discussion::class);
         $this->repository->shouldReceive('restore')->with($discussion)->once()->andReturn(true);
+
+        DB::shouldReceive('transaction')->once()->andReturnUsing(fn ($cb) => $cb());
 
         $this->assertTrue($this->service->restore($discussion));
     }
@@ -179,6 +190,8 @@ class DiscussionServiceTest extends TestCase
             ->with($discussion, ['status' => DiscussionStatus::APPROVED->value])
             ->once()->andReturn(true);
 
+        DB::shouldReceive('transaction')->once()->andReturnUsing(fn ($cb) => $cb());
+
         $this->assertTrue($this->service->approve($discussion));
     }
 
@@ -190,6 +203,8 @@ class DiscussionServiceTest extends TestCase
             ->with($discussion, ['status' => DiscussionStatus::REJECTED->value])
             ->once()->andReturn(true);
 
+        DB::shouldReceive('transaction')->once()->andReturnUsing(fn ($cb) => $cb());
+
         $this->assertTrue($this->service->reject($discussion));
     }
 
@@ -200,6 +215,8 @@ class DiscussionServiceTest extends TestCase
         $this->repository->shouldReceive('update')
             ->with($discussion, ['status' => DiscussionStatus::PENDING->value])
             ->once()->andReturn(true);
+
+        DB::shouldReceive('transaction')->once()->andReturnUsing(fn ($cb) => $cb());
 
         $this->assertTrue($this->service->markAsPending($discussion));
     }
