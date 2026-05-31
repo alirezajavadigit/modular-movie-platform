@@ -1,0 +1,11 @@
+{
+    "name": "User",
+    "alias": "user",
+    "description": "User management module (admin CRUD over the Auth user).",
+    "keywords": ["user", "management", "admin"],
+    "priority": 2,
+    "providers": [
+        "Modules\\User\\Providers\\UserServiceProvider"
+    ],
+    "files": []
+}

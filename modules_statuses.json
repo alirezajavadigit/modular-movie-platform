@@ -11,5 +11,6 @@
     "Like": true,
     "Payment": true,
     "Subscription": true,
-    "Notification": true
+    "Notification": true,
+    "User": true
 }
