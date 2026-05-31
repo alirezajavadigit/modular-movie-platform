@@ -8,8 +8,10 @@ use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Modules\Subscription\Contracts\SubscriptionServiceInterface;
 use Modules\Subscription\Http\Resources\Transformers\SubscriptionTransformer;
+use Modules\Subscription\Models\Subscription;
 
 class SubscriptionQueryController extends Controller
 {
@@ -26,9 +28,9 @@ class SubscriptionQueryController extends Controller
         return ApiResponse::paginated($subscriptions, $this->transformer, __('subscription::messages.index'));
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Subscription $subscription): JsonResponse
     {
-        $subscription = $this->service->findById($id);
+        Gate::authorize('view', $subscription);
 
         return ApiResponse::fractal($subscription, $this->transformer, __('subscription::messages.show'));
     }

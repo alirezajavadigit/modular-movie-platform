@@ -2,53 +2,91 @@
 
 namespace Modules\Payment\Gateways;
 
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 use Modules\Payment\Contracts\GatewayInterface;
 use Modules\Payment\DTOs\CreatePaymentDTO;
+use Modules\Payment\DTOs\PurchaseResultDTO;
 use RuntimeException;
+use Throwable;
+use ZarinPal\Sdk\Endpoint\PaymentGateway\PaymentGateway;
+use ZarinPal\Sdk\Endpoint\PaymentGateway\RequestTypes\RequestRequest;
+use ZarinPal\Sdk\Endpoint\PaymentGateway\RequestTypes\VerifyRequest;
+use ZarinPal\Sdk\HttpClient\Exception\ResponseException;
+use ZarinPal\Sdk\Options;
+use ZarinPal\Sdk\ZarinPal;
 
 final class ZarinPalGateway implements GatewayInterface
 {
-    private string $merchantId;
-    private string $callbackUrl;
-    private string $requestEndpoint = 'https://api.zarinpal.com/pg/v4/payment/request.json';
-    private string $verifyEndpoint  = 'https://api.zarinpal.com/pg/v4/payment/verify.json';
-    private string $startEndpoint   = 'https://www.zarinpal.com/pg/StartPay/';
+    private PaymentGateway $paymentGateway;
 
     public function __construct()
     {
-        $this->merchantId  = config('payment-module.gateways.zarinpal.merchant_id', '');
-        $this->callbackUrl = config('payment-module.gateways.zarinpal.callback_url', '');
-    }
-
-    public function purchase(CreatePaymentDTO $dto): string
-    {
-        $response = Http::post($this->requestEndpoint, [
-            'merchant_id'  => $this->merchantId,
-            'amount'       => (int) ($dto->payable->getPayableAmount() * 10),
-            'callback_url' => $this->callbackUrl,
-            'description'  => $dto->payable->getPayableDescription(),
+        $options = new Options([
+            'merchant_id' => config('payment-module.gateways.zarinpal.merchant_id', ''),
+            'sandbox' => (bool) config('payment-module.gateways.zarinpal.sandbox', false),
         ]);
 
-        $data = $response->json();
+        $this->paymentGateway = (new ZarinPal($options))->paymentGateway();
+    }
+    private function convertToLocalIranianNumber(string $number): string
+    {
+        $number = trim($number);
 
-        if (($data['data']['code'] ?? null) !== 100) {
-            throw new RuntimeException('ZarinPal payment request failed: ' . ($data['errors']['message'] ?? 'Unknown error'));
+        if (str_starts_with($number, '+98')) {
+            return '0' . substr($number, 3);
         }
 
-        return $this->startEndpoint . $data['data']['authority'];
+        // If it already starts with 98 (without +), convert it
+        if (str_starts_with($number, '98')) {
+            return '0' . substr($number, 2);
+        }
+
+        // Return as is if already in local format or unknown format
+        return $number;
+    }
+    public function purchase(CreatePaymentDTO $paymentDTO): PurchaseResultDTO
+    {
+        $request = new RequestRequest();
+        $request->amount = (int) ($paymentDTO->payable->getPayableAmount() * 10);
+        $request->callback_url = $this->resolveCallbackUrl();
+        $request->mobile =  '09120000000';
+        $request->description = $paymentDTO->payable->getPayableDescription();
+
+        try {
+            $response = $this->paymentGateway->request($request);
+        } catch (ResponseException $e) {
+            throw new RuntimeException('ZarinPal payment request failed: ' . $e->getMessage(), previous: $e);
+        }
+
+        return new PurchaseResultDTO(
+            $this->paymentGateway->getRedirectUrl($response->authority),
+            $response->authority,
+        );
     }
 
-    public function verify(string $transactionId): bool
+    public function verify(string $transactionId, float $amount = 0.0): bool
     {
-        $response = Http::post($this->verifyEndpoint, [
-            'merchant_id' => $this->merchantId,
-            'authority'   => $transactionId,
-            'amount'      => 0,
-        ]);
 
-        $data = $response->json();
+        $request = new VerifyRequest();
+        $request->authority = $transactionId;
+        $request->amount = (int) ($amount * 10);
+        $request->mobile = Auth::user()?->phone ?? '09120000000';
 
-        return in_array($data['data']['code'] ?? null, [100, 101], true);
+        try {
+            $response = $this->paymentGateway->verify($request);
+        } catch (Throwable) {
+            return false;
+        }
+
+        return in_array($response->code, [100, 101], true);
+    }
+
+    private function resolveCallbackUrl(): string
+    {
+        $configured = config('payment-module.gateways.zarinpal.callback_url');
+
+        return $configured !== null && $configured !== ''
+            ? $configured
+            : route('payment.callback', ['driver' => 'zarinpal']);
     }
 }
