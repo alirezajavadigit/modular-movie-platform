@@ -19,7 +19,7 @@ final class ArticleRepository implements ArticleRepositoryInterface
     {
         return $this->model->newQuery()->find($id);
     }
-    
+
     public function findBySlug(string $slug): ?Article
     {
         return $this->model->newQuery()
