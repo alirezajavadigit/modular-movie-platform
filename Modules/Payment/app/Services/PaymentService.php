@@ -7,13 +7,14 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use LogicException;
-use RuntimeException;
 use Modules\Payment\Contracts\GatewayInterface;
 use Modules\Payment\Contracts\PaymentRepositoryInterface;
 use Modules\Payment\Contracts\PaymentServiceInterface;
 use Modules\Payment\DTOs\CreatePaymentDTO;
 use Modules\Payment\DTOs\UpdatePaymentDTO;
 use Modules\Payment\Enums\PaymentStatus;
+use Modules\Payment\Events\PaymentFailed;
+use Modules\Payment\Events\PaymentSucceeded;
 use Modules\Payment\Models\Payment;
 
 final class PaymentService implements PaymentServiceInterface
@@ -53,14 +54,16 @@ final class PaymentService implements PaymentServiceInterface
     {
         return DB::transaction(function () use ($dto): string {
             $payment = $this->repository->create($dto);
-
-            if (!$payment) {
-                throw new RuntimeException('Failed to create payment record.');
-            }
-
             $gateway = $this->resolveGateway($dto->driver);
+            $result  = $gateway->purchase($dto);
 
-            return $gateway->purchase($dto);
+            $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
+                paymentId: $payment->id,
+                status: PaymentStatus::PENDING,
+                transactionId: $result->reference,
+            ));
+
+            return $result->redirectUrl;
         });
     }
 
@@ -80,18 +83,62 @@ final class PaymentService implements PaymentServiceInterface
             throw new LogicException('Only pending payments can be verified.');
         }
 
-        return DB::transaction(function () use ($dto, $payment): Payment {
+        $payment = DB::transaction(function () use ($dto, $payment): Payment {
             $gateway  = $this->resolveGateway($payment->driver);
-            $verified = $gateway->verify($dto->transactionId ?? '');
+            $verified = $gateway->verify($dto->transactionId ?? '', (float) $payment->amount);
 
-            $updateDto = new UpdatePaymentDTO(
-                paymentId:     $dto->paymentId,
-                status:        $verified ? PaymentStatus::SUCCESS : PaymentStatus::FAILED,
+            return $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
+                paymentId: $dto->paymentId,
+                status: $verified ? PaymentStatus::SUCCESS : PaymentStatus::FAILED,
                 transactionId: $dto->transactionId,
-            );
-
-            return $this->repository->updatePaymentStatus($updateDto);
+            ));
         });
+
+        $this->dispatchOutcome($payment);
+
+        return $payment;
+    }
+
+    public function callback(string $driver, array $payload): Payment
+    {
+        [$reference, $canceled] = $this->resolveCallback($driver, $payload);
+
+        if ($reference === '') {
+            throw new InvalidArgumentException('Missing payment reference in callback.');
+        }
+
+        $payment = $this->repository->findByTransactionId($reference);
+
+        if (!$payment || $payment->driver !== $driver) {
+            throw new InvalidArgumentException('No matching payment found for this callback.');
+        }
+
+        if (!$payment->status->isPending()) {
+            return $payment;
+        }
+
+        if ($canceled) {
+            return $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
+                paymentId: $payment->id,
+                status: PaymentStatus::CANCELED,
+                transactionId: $reference,
+            ));
+        }
+
+        $payment = DB::transaction(function () use ($driver, $payment, $reference): Payment {
+            $gateway  = $this->resolveGateway($driver);
+            $verified = $gateway->verify($reference, (float) $payment->amount);
+
+            return $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
+                paymentId: $payment->id,
+                status: $verified ? PaymentStatus::SUCCESS : PaymentStatus::FAILED,
+                transactionId: $reference,
+            ));
+        });
+
+        $this->dispatchOutcome($payment);
+
+        return $payment;
     }
 
     public function delete(int $id): bool
@@ -134,6 +181,30 @@ final class PaymentService implements PaymentServiceInterface
         }
 
         return $this->repository->getTrashed($perPage);
+    }
+
+    private function dispatchOutcome(Payment $payment): void
+    {
+        if ($payment->status->isSuccess()) {
+            PaymentSucceeded::dispatch($payment);
+
+            return;
+        }
+
+        if ($payment->status->isFailed()) {
+            PaymentFailed::dispatch($payment);
+        }
+    }
+
+    private function resolveCallback(string $driver, array $payload): array
+    {
+        return match ($driver) {
+            'stripe'   => [(string) ($payload['session_id'] ?? ''), !isset($payload['session_id'])],
+            'paypal'   => [(string) ($payload['token'] ?? ''), !isset($payload['PayerID'])],
+            'zarinpal' => [(string) ($payload['Authority'] ?? ''), ($payload['Status'] ?? null) !== 'OK'],
+            'zibal'    => [(string) ($payload['trackId'] ?? ''), (string) ($payload['success'] ?? '') !== '1'],
+            default    => throw new InvalidArgumentException("Unsupported callback driver: {$driver}"),
+        };
     }
 
     private function resolveGateway(string $driver): GatewayInterface

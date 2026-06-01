@@ -21,7 +21,7 @@ class PaymentQueryController extends Controller
     {
         $payments = $this->service->getAllRelatedToUser((int) auth()->id());
 
-        return ApiResponse::collection($payments, $this->transformer, __('payment::messages.index'));
+        return ApiResponse::fractal($payments, $this->transformer, __('payment::messages.index'));
     }
 
     public function show(int $id): JsonResponse

@@ -2,9 +2,11 @@
 
 namespace Modules\Payment\Gateways;
 
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Modules\Payment\Contracts\GatewayInterface;
 use Modules\Payment\DTOs\CreatePaymentDTO;
+use Modules\Payment\DTOs\PurchaseResultDTO;
 use RuntimeException;
 
 final class StripeGateway implements GatewayInterface
@@ -21,18 +23,18 @@ final class StripeGateway implements GatewayInterface
         $this->cancelUrl   = config('payment-module.gateways.stripe.cancel_url', '');
     }
 
-    public function purchase(CreatePaymentDTO $dto): string
+    public function purchase(CreatePaymentDTO $paymentDTO): PurchaseResultDTO
     {
-        $response = Http::withBasicAuth($this->secretKey, '')
+        $response = $this->client()
             ->asForm()
-            ->post("{$this->baseUrl}/checkout/sessions", [
-                'mode'                 => 'payment',
-                'success_url'          => $this->callbackUrl . '?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url'           => $this->cancelUrl,
-                'line_items[0][price_data][currency]'                        => 'usd',
-                'line_items[0][price_data][unit_amount]'                     => (int) ($dto->payable->getPayableAmount() * 100),
-                'line_items[0][price_data][product_data][name]'              => $dto->payable->getPayableDescription(),
-                'line_items[0][quantity]'                                    => 1,
+            ->post('/checkout/sessions', [
+                'mode'        => 'payment',
+                'success_url' => $this->callbackUrl . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url'  => $this->cancelUrl,
+                'line_items[0][price_data][currency]'           => 'usd',
+                'line_items[0][price_data][unit_amount]'        => (int) ($paymentDTO->payable->getPayableAmount() * 100),
+                'line_items[0][price_data][product_data][name]' => $paymentDTO->payable->getPayableDescription(),
+                'line_items[0][quantity]'                       => 1,
             ]);
 
         $data = $response->json();
@@ -41,16 +43,18 @@ final class StripeGateway implements GatewayInterface
             throw new RuntimeException('Stripe checkout session creation failed: ' . ($data['error']['message'] ?? 'Unknown error'));
         }
 
-        return $data['url'];
+        return new PurchaseResultDTO($data['url'], (string) $data['id']);
     }
 
-    public function verify(string $transactionId): bool
+    public function verify(string $transactionId, float $amount = 0.0): bool
     {
-        $response = Http::withBasicAuth($this->secretKey, '')
-            ->get("{$this->baseUrl}/checkout/sessions/{$transactionId}");
+        return $this->client()
+            ->get("/checkout/sessions/{$transactionId}")
+            ->json('payment_status') === 'paid';
+    }
 
-        $data = $response->json();
-
-        return ($data['payment_status'] ?? null) === 'paid';
+    private function client(): PendingRequest
+    {
+        return Http::baseUrl($this->baseUrl)->withBasicAuth($this->secretKey, '');
     }
 }
