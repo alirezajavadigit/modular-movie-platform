@@ -9,9 +9,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Modules\Article\Contracts\ArticleServiceInterface;
 use Modules\Article\Http\Resources\Transformers\ArticleTransformer;
+use Modules\Article\Models\Article;
 
 class ArticleStatusController extends Controller
 {
+    protected static string $modelClass = Article::class;
     public function __construct(
         private readonly ArticleServiceInterface $articleService,
         private readonly ArticleTransformer $articleTransformer,
