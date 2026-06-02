@@ -20,6 +20,10 @@ interface DiscussionServiceInterface
 
     public function getByUser(int $userId, int $perPage = 15): LengthAwarePaginator;
 
+    public function getRejected(int $perPage = 15): LengthAwarePaginator;
+
+    public function getApproved(int $perPage = 15): LengthAwarePaginator;
+
     public function getPending(int $perPage = 15): LengthAwarePaginator;
 
     public function store(CreateDiscussionDTO $dto): Discussion;

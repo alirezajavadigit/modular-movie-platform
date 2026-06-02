@@ -7,10 +7,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Discussion\Contracts\DiscussionRepositoryInterface;
 use Modules\Discussion\Models\Discussion;
 
-class DiscussionRepository implements DiscussionRepositoryInterface
+final class DiscussionRepository implements DiscussionRepositoryInterface
 {
     public function __construct(
-        private readonly Discussion $model
+        private readonly Discussion $model,
     ) {}
 
     public function findById(int $id): ?Discussion
@@ -54,6 +54,24 @@ class DiscussionRepository implements DiscussionRepositoryInterface
         return $this->model->newQuery()
             ->where('user_id', $userId)
             ->with(['discussionable', 'parent'])
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    public function getRejected(int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->rejected()
+            ->with(['user', 'discussionable'])
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    public function getApproved(int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->approved()
+            ->with(['user', 'discussionable'])
             ->latest()
             ->paginate($perPage);
     }
