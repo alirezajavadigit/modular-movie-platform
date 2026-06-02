@@ -40,6 +40,15 @@ final class SubscriptionPlanService implements SubscriptionPlanServiceInterface
         return $this->repository->getActive();
     }
 
+    public function getActivePaginate(int $perPage = 15): LengthAwarePaginator
+    {
+        if ($perPage < 1 || $perPage > 100) {
+            throw new InvalidArgumentException('Per page must be between 1 and 100.');
+        }
+
+        return $this->repository->getActivePaginate($perPage);
+    }
+
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         if ($perPage < 1 || $perPage > 100) {
@@ -62,94 +71,46 @@ final class SubscriptionPlanService implements SubscriptionPlanServiceInterface
         });
     }
 
-    public function update(int $id, UpdateSubscriptionPlanDTO $dto): SubscriptionPlan
+    public function update(SubscriptionPlan $plan, UpdateSubscriptionPlanDTO $dto): SubscriptionPlan
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription plan ID must be a positive integer.');
-        }
-
-        $plan = $this->repository->findById($id);
-
-        if (!$plan) {
-            throw new InvalidArgumentException("Subscription plan with ID {$id} not found.");
-        }
-
-        return DB::transaction(fn(): SubscriptionPlan => $this->repository->update($id, $dto));
+        return DB::transaction(fn(): SubscriptionPlan => $this->repository->update($plan, $dto));
     }
 
-    public function activate(int $id): SubscriptionPlan
+    public function activate(SubscriptionPlan $plan): SubscriptionPlan
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription plan ID must be a positive integer.');
-        }
-
-        $plan = $this->repository->findById($id);
-
-        if (!$plan) {
-            throw new InvalidArgumentException("Subscription plan with ID {$id} not found.");
-        }
-
         if ($plan->status->isActive()) {
             throw new LogicException('Subscription plan is already active.');
         }
 
-        return DB::transaction(fn(): SubscriptionPlan => $this->repository->update($id, new UpdateSubscriptionPlanDTO(
+        return DB::transaction(fn(): SubscriptionPlan => $this->repository->update($plan, new UpdateSubscriptionPlanDTO(
             status: SubscriptionPlanStatus::ACTIVE,
         )));
     }
 
-    public function deactivate(int $id): SubscriptionPlan
+    public function deactivate(SubscriptionPlan $plan): SubscriptionPlan
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription plan ID must be a positive integer.');
-        }
-
-        $plan = $this->repository->findById($id);
-
-        if (!$plan) {
-            throw new InvalidArgumentException("Subscription plan with ID {$id} not found.");
-        }
-
         if ($plan->status->isInactive()) {
             throw new LogicException('Subscription plan is already inactive.');
         }
 
-        return DB::transaction(fn(): SubscriptionPlan => $this->repository->update($id, new UpdateSubscriptionPlanDTO(
+        return DB::transaction(fn(): SubscriptionPlan => $this->repository->update($plan, new UpdateSubscriptionPlanDTO(
             status: SubscriptionPlanStatus::INACTIVE,
         )));
     }
 
-    public function delete(int $id): bool
+    public function delete(SubscriptionPlan $plan): bool
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription plan ID must be a positive integer.');
-        }
-
-        $plan = $this->repository->findById($id);
-
-        if (!$plan) {
-            throw new InvalidArgumentException("Subscription plan with ID {$id} not found.");
-        }
-
-        return DB::transaction(fn(): bool => $this->repository->delete($id));
+        return DB::transaction(fn(): bool => $this->repository->delete($plan));
     }
 
-    public function forceDelete(int $id): bool
+    public function forceDelete(SubscriptionPlan $plan): bool
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription plan ID must be a positive integer.');
-        }
-
-        return DB::transaction(fn(): bool => $this->repository->forceDelete($id));
+        return DB::transaction(fn(): bool => $this->repository->forceDelete($plan));
     }
 
-    public function restore(int $id): SubscriptionPlan
+    public function restore(SubscriptionPlan $plan): SubscriptionPlan
     {
-        if ($id <= 0) {
-            throw new InvalidArgumentException('Subscription plan ID must be a positive integer.');
-        }
-
-        return DB::transaction(fn(): SubscriptionPlan => $this->repository->restore($id));
+        return DB::transaction(fn(): SubscriptionPlan => $this->repository->restore($plan));
     }
 
     public function getTrashed(int $perPage = 15): LengthAwarePaginator

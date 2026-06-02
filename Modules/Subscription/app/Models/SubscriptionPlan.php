@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Subscription\Database\Factories\SubscriptionPlanFactory;
 use Modules\Subscription\Enums\SubscriptionPlanStatus;
+use Illuminate\Database\Eloquent\Builder;
 
 class SubscriptionPlan extends Model
 {
@@ -31,6 +32,16 @@ class SubscriptionPlan extends Model
             'duration_days' => 'integer',
             'status'        => SubscriptionPlanStatus::class,
         ];
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', SubscriptionPlanStatus::ACTIVE->value);
+    }
+
+    public function scopeInactive(Builder $query): Builder
+    {
+        return $query->where('status', SubscriptionPlanStatus::INACTIVE->value);
     }
 
     protected static function newFactory(): SubscriptionPlanFactory

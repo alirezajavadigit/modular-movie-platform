@@ -34,6 +34,14 @@ final class SubscriptionPlanRepository implements SubscriptionPlanRepositoryInte
             ->get();
     }
 
+    public function getActivePaginate(int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->active()
+            ->latest()
+            ->paginate($perPage);
+    }
+
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()->latest()->paginate($perPage);
@@ -50,10 +58,8 @@ final class SubscriptionPlanRepository implements SubscriptionPlanRepositoryInte
         ]);
     }
 
-    public function update(int $id, UpdateSubscriptionPlanDTO $dto): SubscriptionPlan
+    public function update(SubscriptionPlan $plan, UpdateSubscriptionPlanDTO $dto): SubscriptionPlan
     {
-        $plan = $this->model->newQuery()->findOrFail($id);
-
         $plan->update(array_filter([
             'name'          => $dto->name,
             'description'   => $dto->description,
@@ -65,19 +71,18 @@ final class SubscriptionPlanRepository implements SubscriptionPlanRepositoryInte
         return $plan->refresh();
     }
 
-    public function delete(int $id): bool
+    public function delete(SubscriptionPlan $plan): bool
     {
-        return (bool) $this->model->newQuery()->findOrFail($id)->delete();
+        return (bool) $plan->delete();
     }
 
-    public function forceDelete(int $id): bool
+    public function forceDelete(SubscriptionPlan $plan): bool
     {
-        return (bool) $this->model->newQuery()->withTrashed()->findOrFail($id)->forceDelete();
+        return (bool) $plan->forceDelete();
     }
 
-    public function restore(int $id): SubscriptionPlan
+    public function restore(SubscriptionPlan $plan): SubscriptionPlan
     {
-        $plan = $this->model->newQuery()->withTrashed()->findOrFail($id);
         $plan->restore();
 
         return $plan->refresh();

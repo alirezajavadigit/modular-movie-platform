@@ -13,13 +13,14 @@ interface SubscriptionPlanServiceInterface
     public function findById(int $id): ?SubscriptionPlan;
     public function getAll(): Collection;
     public function getActive(): Collection;
+    public function getActivePaginate(int $perPage = 15): LengthAwarePaginator;
     public function paginate(int $perPage = 15): LengthAwarePaginator;
     public function store(CreateSubscriptionPlanDTO $dto): SubscriptionPlan;
-    public function update(int $id, UpdateSubscriptionPlanDTO $dto): SubscriptionPlan;
-    public function activate(int $id): SubscriptionPlan;
-    public function deactivate(int $id): SubscriptionPlan;
-    public function delete(int $id): bool;
-    public function forceDelete(int $id): bool;
-    public function restore(int $id): SubscriptionPlan;
+    public function update(SubscriptionPlan $plan, UpdateSubscriptionPlanDTO $dto): SubscriptionPlan;
+    public function activate(SubscriptionPlan $plan): SubscriptionPlan;
+    public function deactivate(SubscriptionPlan $plan): SubscriptionPlan;
+    public function delete(SubscriptionPlan $plan): bool;
+    public function forceDelete(SubscriptionPlan $plan): bool;
+    public function restore(SubscriptionPlan $plan): SubscriptionPlan;
     public function getTrashed(int $perPage = 15): LengthAwarePaginator;
 }
