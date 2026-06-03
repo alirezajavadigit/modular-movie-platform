@@ -1,58 +1,57 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Support\Facades\Route;
 use Modules\Discussion\Http\Controllers\DiscussionController;
+use Modules\Discussion\Http\Controllers\DiscussionQueryController;
+use Modules\Discussion\Http\Controllers\DiscussionStatusController;
+use Modules\Discussion\Http\Controllers\DiscussionTrashedController;
 
-Route::middleware(['auth:api'])
-    ->prefix('api/v1/discussions')
-    ->name('api.v1.discussions.')
-    ->group(function () {
-        Route::get('/pending/list', [DiscussionController::class, 'pending'])->name('pending.list');
-        Route::get('/user/{userId}', [DiscussionController::class, 'userDiscussions'])
-            ->whereNumber('userId')
-            ->name('user');
+Route::middleware('api')->prefix('api/v1/discussions')->group(function () {
+    Route::get('{discussion}/replies', [DiscussionQueryController::class, 'replies'])
+        ->whereNumber('discussion');
+});
 
-        Route::get('/{discussionableType}/{discussionableId}', [DiscussionController::class, 'index'])
-            ->whereNumber('discussionableId')
-            ->name('index');
+Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/discussions')->group(function () {
+    Route::get('pending/list', [DiscussionQueryController::class, 'pending']);
 
-        Route::post('/', [DiscussionController::class, 'store'])->name('store');
+    Route::get('{discussionableType}/{discussionableId}', [DiscussionQueryController::class, 'byDiscussionable'])
+        ->whereNumber('discussionableId');
 
-        Route::get('/{discussion}', [DiscussionController::class, 'show'])
-            ->whereNumber('discussion')
-            ->name('show');
+    Route::get('{discussion}', [DiscussionController::class, 'show'])
+        ->whereNumber('discussion');
 
-        Route::put('/{discussion}', [DiscussionController::class, 'update'])
-            ->whereNumber('discussion')
-            ->name('update');
+    Route::post('/', [DiscussionController::class, 'store']);
 
-        Route::delete('/{discussion}', [DiscussionController::class, 'destroy'])
-            ->whereNumber('discussion')
-            ->name('destroy');
+    Route::put('{discussion}', [DiscussionController::class, 'update'])
+        ->whereNumber('discussion');
 
-        Route::get('/{discussion}/replies', [DiscussionController::class, 'replies'])
-            ->whereNumber('discussion')
-            ->name('replies');
+    Route::delete('{discussion}', [DiscussionController::class, 'destroy'])
+        ->whereNumber('discussion');
 
-        Route::post('/{discussion}/approve', [DiscussionController::class, 'approve'])
-            ->whereNumber('discussion')
-            ->name('approve');
+    Route::delete('{discussion}/force', [DiscussionTrashedController::class, 'forceDelete'])
+        ->whereNumber('discussion')
+        ->withTrashed();
 
-        Route::post('/{discussion}/reject', [DiscussionController::class, 'reject'])
-            ->whereNumber('discussion')
-            ->name('reject');
+    Route::post('{discussion}/restore', [DiscussionTrashedController::class, 'restore'])
+        ->whereNumber('discussion')
+        ->withTrashed();
 
-        Route::post('/{discussion}/pending', [DiscussionController::class, 'markAsPending'])
-            ->whereNumber('discussion')
-            ->name('pending');
+    Route::post('{discussion}/approve', [DiscussionStatusController::class, 'approve'])
+        ->whereNumber('discussion');
 
-        Route::delete('/{discussion}/force', [DiscussionController::class, 'forceDelete'])
-            ->whereNumber('discussion')
-            ->withTrashed()
-            ->name('force-delete');
+    Route::post('{discussion}/reject', [DiscussionStatusController::class, 'reject'])
+        ->whereNumber('discussion');
 
-        Route::post('/{discussion}/restore', [DiscussionController::class, 'restore'])
-            ->whereNumber('discussion')
-            ->withTrashed()
-            ->name('restore');
-    });
+    Route::post('{discussion}/pending', [DiscussionStatusController::class, 'markAsPending'])
+        ->whereNumber('discussion');
+});
+
+Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/discussions')->group(function () {
+    Route::get('approved', [DiscussionQueryController::class, 'approved']);
+    Route::get('rejected', [DiscussionQueryController::class, 'rejected']);
+
+    Route::get('user/{userId}', [DiscussionQueryController::class, 'byUser'])
+        ->whereNumber('userId');
+});

@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Modules\Discussion\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,9 +33,12 @@ class Discussion extends Model
         'ip_address',
     ];
 
-    protected $casts = [
-        'status' => DiscussionStatus::class,
-    ];
+    protected function casts(): array
+    {
+        return [
+            'status' => DiscussionStatus::class,
+        ];
+    }
 
     protected static function newFactory(): DiscussionFactory
     {
@@ -64,36 +70,36 @@ class Discussion extends Model
         return $this->morphTo();
     }
 
-    public function scopeApproved($query)
+    public function scopeApproved(Builder $query): Builder
     {
         return $query->where('status', DiscussionStatus::APPROVED->value);
     }
 
-    public function scopePending($query)
+    public function scopePending(Builder $query): Builder
     {
         return $query->where('status', DiscussionStatus::PENDING->value);
     }
 
-    public function scopeRejected($query)
+    public function scopeRejected(Builder $query): Builder
     {
         return $query->where('status', DiscussionStatus::REJECTED->value);
     }
 
-    public function scopeParents($query)
+    public function scopeParents(Builder $query): Builder
     {
         return $query->whereNull('parent_id');
     }
 
-    public function scopeOnlyReplies($query)
+    public function scopeOnlyReplies(Builder $query): Builder
     {
         return $query->whereNotNull('parent_id');
     }
 
-    public function scopeForDiscussionable($query, string $type, int $id)
+    public function scopeForDiscussionable(Builder $query, string $type, int $id): Builder
     {
-        $type = Relation::getMorphAlias($type);
-
-        return $query->where('discussionable_type', $type)->where('discussionable_id', $id);
+        return $query
+            ->where('discussionable_type', Relation::getMorphAlias($type))
+            ->where('discussionable_id', $id);
     }
 
     public function isApproved(): bool
@@ -119,26 +125,5 @@ class Discussion extends Model
     public function isReply(): bool
     {
         return ! is_null($this->parent_id);
-    }
-
-    public function approve(): bool
-    {
-        $this->status = DiscussionStatus::APPROVED;
-
-        return $this->save();
-    }
-
-    public function reject(): bool
-    {
-        $this->status = DiscussionStatus::REJECTED;
-
-        return $this->save();
-    }
-
-    public function markAsPending(): bool
-    {
-        $this->status = DiscussionStatus::PENDING;
-
-        return $this->save();
     }
 }
