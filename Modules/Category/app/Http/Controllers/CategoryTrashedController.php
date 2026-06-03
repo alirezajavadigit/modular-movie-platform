@@ -10,9 +10,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Category\Contracts\CategoryServiceInterface;
 use Modules\Category\Http\Resources\Transformers\CategoryTransformer;
+use Modules\Category\Models\Category;
 
 class CategoryTrashedController extends Controller
 {
+    protected static string $modelClass = Category::class;
     public function __construct(
         private readonly CategoryServiceInterface $categoryService,
         private readonly CategoryTransformer $categoryTransformer,

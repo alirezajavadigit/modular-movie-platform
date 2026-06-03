@@ -2,9 +2,12 @@
 
 namespace Modules\Category\Providers;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Modules\Category\Contracts\CategoryRepositoryInterface;
 use Modules\Category\Contracts\CategoryServiceInterface;
+use Modules\Category\Models\Category;
+use Modules\Category\Policies\CategoryPolicy;
 use Modules\Category\Repositories\CategoryRepository;
 use Modules\Category\Services\CategoryService;
 use Nwidart\Modules\Support\ModuleServiceProvider;
@@ -44,6 +47,8 @@ class CategoryServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        Gate::policy(Category::class, CategoryPolicy::class);
 
         Route::middleware('api')
             ->group(module_path('Category', '/routes/api.php'));
