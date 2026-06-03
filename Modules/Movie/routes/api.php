@@ -25,11 +25,13 @@ Route::prefix('api/v1')
             Route::apiResource('movies', MovieController::class)
                 ->except(['index', 'show']);
             Route::post('movies/{movie}/restore', [MovieController::class, 'restore'])
-                ->name('movies.restore');
+                ->name('movies.restore')
+                ->withTrashed();
 
             Route::apiResource('movies.episodes', EpisodeController::class)
                 ->except(['index', 'show']);
             Route::post('movies/{movie}/episodes/{episode}/restore', [EpisodeController::class, 'restore'])
-                ->name('movies.episodes.restore');
+                ->name('movies.episodes.restore')
+                ->withTrashed();
         });
     });
