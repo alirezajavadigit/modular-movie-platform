@@ -10,9 +10,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Person\Contracts\PersonServiceInterface;
 use Modules\Person\Http\Resources\Transformers\PersonTransformer;
+use Modules\Person\Models\Person;
 
 class PersonTrashedController extends Controller
 {
+    protected static string $modelClass = Person::class;
     public function __construct(
         private readonly PersonServiceInterface $service,
         private readonly PersonTransformer $transformer,

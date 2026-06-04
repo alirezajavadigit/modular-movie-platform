@@ -3,11 +3,16 @@
 namespace Modules\Person\Providers;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Modules\Person\Contracts\CreditRepositoryInterface;
 use Modules\Person\Contracts\CreditServiceInterface;
 use Modules\Person\Contracts\PersonRepositoryInterface;
 use Modules\Person\Contracts\PersonServiceInterface;
+use Modules\Person\Models\Credit;
+use Modules\Person\Models\Person;
+use Modules\Person\Policies\CreditPolicy;
+use Modules\Person\Policies\PersonPolicy;
 use Modules\Person\Repositories\CreditRepository;
 use Modules\Person\Repositories\PersonRepository;
 use Modules\Person\Services\CreditService;
@@ -45,6 +50,9 @@ class PersonServiceProvider extends ModuleServiceProvider
     public function boot(): void
     {
         parent::boot();
+
+        Gate::policy(Person::class, PersonPolicy::class);
+        Gate::policy(Credit::class, CreditPolicy::class);
 
         $this->registerMorphMap();
 
