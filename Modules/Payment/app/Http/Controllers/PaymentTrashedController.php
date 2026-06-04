@@ -10,9 +10,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Payment\Contracts\PaymentServiceInterface;
 use Modules\Payment\Http\Resources\Transformers\PaymentTransformer;
+use Modules\Payment\Models\Payment;
 
 class PaymentTrashedController extends Controller
 {
+    protected static string $modelClass = Payment::class;
     public function __construct(
         private readonly PaymentServiceInterface $service,
         private readonly PaymentTransformer $transformer,
