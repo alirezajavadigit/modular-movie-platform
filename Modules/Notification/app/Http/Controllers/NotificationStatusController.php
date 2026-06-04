@@ -14,6 +14,8 @@ use Modules\Notification\Models\Notification;
 
 class NotificationStatusController extends Controller
 {
+    protected static string $modelClass = Notification::class;
+
     public function __construct(
         private readonly NotificationServiceInterface $service,
         private readonly NotificationTransformer $transformer,

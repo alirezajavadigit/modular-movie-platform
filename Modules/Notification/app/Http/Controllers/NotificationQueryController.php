@@ -10,9 +10,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Notification\Contracts\NotificationServiceInterface;
 use Modules\Notification\Http\Resources\Transformers\NotificationTransformer;
+use Modules\Notification\Models\Notification;
 
 class NotificationQueryController extends Controller
 {
+    protected static string $modelClass = Notification::class;
     public function __construct(
         private readonly NotificationServiceInterface $service,
         private readonly NotificationTransformer $transformer,

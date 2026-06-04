@@ -14,6 +14,8 @@ use Modules\Notification\Models\Notification;
 
 class NotificationTrashedController extends Controller
 {
+    protected static string $modelClass = Notification::class;
+
     public function __construct(
         private readonly NotificationServiceInterface $service,
         private readonly NotificationTransformer $transformer,
@@ -27,16 +29,16 @@ class NotificationTrashedController extends Controller
         return ApiResponse::paginated($items, $this->transformer, __('notification::messages.trashed'));
     }
 
-    public function restore(Notification $trashedNotification): JsonResponse
+    public function restore(Notification $notification): JsonResponse
     {
-        $restored = $this->service->restore($trashedNotification->id);
+        $restored = $this->service->restore($notification->id);
 
         return ApiResponse::fractal($restored, $this->transformer, __('notification::messages.restored'));
     }
 
-    public function forceDelete(Notification $trashedNotification): JsonResponse
+    public function forceDelete(Notification $notification): JsonResponse
     {
-        $this->service->forceDelete($trashedNotification->id);
+        $this->service->forceDelete($notification->id);
 
         return ApiResponse::noContent(__('notification::messages.force_deleted'));
     }
