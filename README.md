@@ -1,66 +1,228 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Modular Movie Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A production-ready RESTful API for a movie streaming platform built with **Laravel 11**. The codebase is split into independent modules — each owning its own models, migrations, services, and tests — so the project scales without turning into a monolith.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## What's inside
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Module | What it does |
+|---|---|
+| **Movie** | Movies & serials, episodes, IMDB scores, badges, download links |
+| **Article** | Blog/news with multilingual content, publishing workflow, soft deletes |
+| **Person** | Cast & crew profiles (actor, director, writer…), image uploads |
+| **Category** | Nested category tree with slug-based lookup |
+| **Tag** | Polymorphic tags shared across movies and articles |
+| **Auth** | JWT login/register, token refresh, Google OAuth, OTP via email & SMS |
+| **Authorization** | Role-based access control, per-module permissions, auto-authorize middleware |
+| **Like** | Toggle likes on any likeable resource |
+| **Favorite** | User favorites list with toggle support |
+| **Discussion** | Threaded comments with moderation (approve / reject / pending) |
+| **Notification** | Multi-channel notifications (email, SMS), read/unread state |
+| **Subscription** | Subscription plans, subscribe / cancel / activate flows |
+| **Payment** | Stripe, PayPal, ZarinPal, Zibal gateway adapters |
+| **User** | Admin user management with soft deletes |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Tech stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **PHP 8.3** · **Laravel 11**
+- **PostgreSQL 16** — primary database
+- **Redis** — cache & queues
+- **Docker + Nginx** — containerized from day one
+- **nwidart/laravel-modules** — module system
+- **spatie/laravel-permission** — RBAC
+- **spatie/laravel-medialibrary** — file & image management
+- **spatie/laravel-fractal** — API transformers
+- **spatie/laravel-translatable** — multilingual model attributes
+- **php-open-source-saver/jwt-auth** — stateless JWT auth
+- **laravel/socialite** — Google OAuth
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Architecture
 
-## Laravel Sponsors
+Every module follows the same internal structure:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```
+Modules/Movie/
+├── app/
+│   ├── Contracts/          # Repository & service interfaces
+│   ├── DTOs/               # Typed data transfer objects
+│   ├── Enums/              # PHP 8 backed enums
+│   ├── Http/
+│   │   ├── Controllers/    # Single-action controllers
+│   │   ├── Requests/       # Form request validation
+│   │   └── Resources/      # Fractal transformers
+│   ├── Models/
+│   ├── Policies/
+│   ├── Repositories/
+│   └── Services/
+├── database/
+│   ├── factories/
+│   ├── migrations/
+│   └── seeders/
+├── routes/api.php
+└── tests/
+    ├── Feature/
+    └── Unit/
+```
 
-### Premium Partners
+The `auto.authorize` middleware resolves the correct policy gate from the route name automatically — no manual `$this->authorize()` calls scattered through controllers.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+---
 
-## Contributing
+## Getting started
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### With Docker (recommended)
 
-## Code of Conduct
+```bash
+git clone https://github.com/alirezajavadigit/modular-movie-platform.git
+cd modular-movie-platform
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+cp .env.example .env
 
-## Security Vulnerabilities
+docker compose -f docker/docker-compose.yml up -d
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+docker exec movies_app composer install
+docker exec movies_app php artisan key:generate
+docker exec movies_app php artisan migrate --seed
+```
+
+The API will be available at `http://localhost:8080`.
+
+### Without Docker
+
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+
+# configure DB_* and REDIS_* in .env, then:
+php artisan migrate --seed
+php artisan serve
+```
+
+---
+
+## API overview
+
+All endpoints are prefixed with `/api/v1`. Public routes need no token; admin routes require `Authorization: Bearer <token>`.
+
+### Auth
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/auth/register` | Register a new account |
+| `POST` | `/auth/login` | Get JWT access + refresh tokens |
+| `POST` | `/auth/refresh` | Rotate the access token |
+| `POST` | `/auth/logout` | Invalidate the token |
+| `GET` | `/auth/me` | Current user profile |
+| `POST` | `/auth/forgot-password` | Send OTP for password reset |
+| `GET` | `/auth/oauth/google` | Redirect to Google OAuth |
+
+### Movies & Episodes
+
+| Method | Endpoint | Notes |
+|---|---|---|
+| `GET` | `/movies` | Public listing |
+| `GET` | `/movies/{movie}` | Public detail |
+| `GET` | `/movies/{movie}/episodes` | Episode list |
+| `POST` | `/movies` | Admin — create |
+| `PUT` | `/movies/{movie}` | Admin — update |
+| `DELETE` | `/movies/{movie}` | Admin — soft delete |
+| `POST` | `/movies/{movie}/restore` | Admin — restore |
+
+### Articles
+
+Public routes (`/articles/*`) expose published content with search, slug lookup, and related articles. Admin routes (`/admin/articles/*`) add draft/archive management and trash/restore.
+
+### People & Credits
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/persons/popular` | Top persons by credit count |
+| `GET` | `/credits/{type}/{id}/cast` | Cast for a movie or article |
+| `GET` | `/credits/{type}/{id}/crew` | Crew for a movie or article |
+| `POST` | `/admin/persons/{person}/image` | Upload profile photo |
+
+### Social
+
+| Endpoint | Description |
+|---|---|
+| `POST /likes/toggle` | Like or unlike any resource |
+| `POST /favorites/toggle` | Add or remove from favorites |
+| `GET /favorites` | Current user's favorites |
+
+### Subscriptions & Payments
+
+```
+GET  /subscription-plans           # Browse available plans
+POST /subscriptions/subscribe       # Subscribe to a plan (triggers payment)
+PATCH /subscriptions/{id}/cancel    # Cancel an active subscription
+
+GET  /payments/callback/{driver}    # Payment gateway callback (Stripe, ZarinPal, …)
+GET  /payments                      # User's own payment history (admin: all payments)
+```
+
+---
+
+## Running tests
+
+Tests use an in-memory SQLite database — no external setup needed.
+
+```bash
+php artisan test
+```
+
+To run a specific module:
+
+```bash
+php artisan test --filter MovieFeatureTest
+```
+
+---
+
+## CI / CD
+
+Pushing to `develop` triggers the GitHub Actions pipeline:
+
+1. **Test** — installs dependencies, generates app key, runs the full PHPUnit suite
+2. **Merge** — on green, merges `develop` into `main` automatically
+3. **Tag** — creates the `v1` tag on `main` (once, skipped on subsequent runs)
+
+---
+
+## Environment variables
+
+Key variables to configure in `.env`:
+
+```dotenv
+APP_URL=http://localhost
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_DATABASE=movies_db
+DB_USERNAME=movies_user
+DB_PASSWORD=secret
+
+REDIS_HOST=127.0.0.1
+
+JWT_SECRET=          # php artisan jwt:secret
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=
+
+STRIPE_KEY=
+STRIPE_SECRET=
+ZARINPAL_MERCHANT_ID=
+ZIBAL_MERCHANT=
+```
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT
