@@ -14,20 +14,22 @@ class AutoAuthorizeMiddleware
     ];
 
     private array $abilityMap = [
-        'index'             => 'viewAny',
-        'show'              => 'view',
-        'store'             => 'create',
-        'update'            => 'update',
-        'destroy'           => 'delete',
-        'syncPermissions'   => 'syncPermissions',
-        'assignRoles'       => 'assignToUser',
-        'revokeRoles'       => 'revokeFromUser',
-        'syncRoles'         => 'assignToUser',
-        'assignPermissions' => 'assignToUser',
-        'revokePermissions' => 'revokeFromUser',
-        'getUserRoles'      => 'viewAny',
+        'index'              => 'viewAny',
+        'show'               => 'view',
+        'store'              => 'create',
+        'update'             => 'update',
+        'destroy'            => 'delete',
+        'syncPermissions'    => 'syncPermissions',
+        'assignRoles'        => 'assignToUser',
+        'revokeRoles'        => 'revokeFromUser',
+        'syncRoles'          => 'assignToUser',
+        'assignPermissions'  => 'assignToUser',
+        'revokePermissions'  => 'revokeFromUser',
+        'getUserRoles'       => 'viewAny',
         'getUserPermissions' => 'viewAny',
-        'byModule'          => 'viewAny',
+        'byModule'           => 'viewAny',
+        'byDiscussionable'   => 'viewAny',
+        'pending'            => 'viewPending',
     ];
 
     public function handle(Request $request, Closure $next): mixed
@@ -51,14 +53,21 @@ class AutoAuthorizeMiddleware
 
         $ability = $this->abilityMap[$action] ?? $action;
 
-        $modelMethods = ['show', 'update', 'destroy'];
+        $policy = Gate::getPolicyFor($modelClass);
+        if (!method_exists($policy, $ability)) {
+            return $next($request);
+        }
 
-        if (in_array($action, $modelMethods)) {
-            $routeParam = Str::camel(class_basename($modelClass));
-            $model = $route->parameter($routeParam);
+        $routeParam = Str::camel(class_basename($modelClass));
+        $model = $route->parameter($routeParam);
 
+        if ($model !== null) {
             if (!($model instanceof $modelClass)) {
                 $model = $modelClass::find($model);
+
+                if (!$model && in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($modelClass))) {
+                    $model = $modelClass::withTrashed()->find($route->parameter($routeParam));
+                }
             }
 
             if (!$model) {
@@ -75,6 +84,10 @@ class AutoAuthorizeMiddleware
 
     private function resolveModelFromController(string $controllerClass): ?string
     {
+        if (isset($controllerClass::$modelClass)) {
+            return $controllerClass::$modelClass;
+        }
+
         $basename = Str::beforeLast(class_basename($controllerClass), 'Controller');
         $namespaceRoot = Str::beforeLast($controllerClass, '\\Http\\Controllers');
         $modelClass = $namespaceRoot . '\\Models\\' . $basename;

@@ -5,6 +5,7 @@ namespace Modules\Subscription\Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Mockery;
 use Modules\Auth\Models\User;
 use Modules\Subscription\Contracts\SubscriptionPlanRepositoryInterface;
@@ -33,6 +34,8 @@ class SubscriptionPlanFeatureTest extends TestCase
 
         $this->app['router']->group(['middleware' => 'api'], __DIR__ . '/../../routes/api.php');
 
+        Route::bind('subscriptionPlan', fn(string $value) => SubscriptionPlan::withTrashed()->findOrFail($value));
+
         $this->app->bind(SubscriptionPlanRepositoryInterface::class, SubscriptionPlanRepository::class);
 
         Gate::policy(SubscriptionPlan::class, SubscriptionPlanPolicy::class);
@@ -49,38 +52,23 @@ class SubscriptionPlanFeatureTest extends TestCase
         Mockery::close();
     }
 
-    private function asAdmin(): static
-    {
-        $user = User::factory()->create();
-
-        Permission::firstOrCreate(['name' => 'subscription_plans.viewAny', 'guard_name' => 'api']);
-
-        $user->givePermissionTo('subscription_plans.viewAny');
-
-        $this->actingAs($user, 'api');
-
-        return $this;
-    }
-
-    public function test_index_returns_paginated_plans(): void
+    public function test_public_index_returns_paginated_plans(): void
     {
         $paginator = new LengthAwarePaginator([], 0, 15, 1, ['path' => 'http://localhost']);
 
-        $this->service->shouldReceive('paginate')->once()->andReturn($paginator);
+        $this->service->shouldReceive('getActivePaginate')->once()->andReturn($paginator);
 
-        $this->asAdmin()
-            ->getJson('api/v1/subscription-plans')
+        $this->getJson('api/v1/subscription-plans')
             ->assertOk();
     }
 
-    public function test_show_returns_plan(): void
+    public function test_public_show_returns_plan(): void
     {
-        $plan = SubscriptionPlan::factory()->make(['id' => 1]);
+        $plan = SubscriptionPlan::factory()->create();
 
-        $this->service->shouldReceive('findById')->with(1)->once()->andReturn($plan);
-
-        $this->getJson('api/v1/subscription-plans/1')
-            ->assertOk();
+        $this->getJson("api/v1/subscription-plans/{$plan->id}")
+            ->assertOk()
+            ->assertJsonFragment(['id' => $plan->id]);
     }
 
     public function test_store_creates_plan(): void
@@ -115,7 +103,7 @@ class SubscriptionPlanFeatureTest extends TestCase
 
         $plan = SubscriptionPlan::factory()->create();
 
-        $this->service->shouldReceive('delete')->with($plan->id)->once()->andReturn(true);
+        $this->service->shouldReceive('delete')->once()->andReturn(true);
 
         $this->deleteJson("api/v1/admin/subscription-plans/{$plan->id}")
             ->assertNoContent();

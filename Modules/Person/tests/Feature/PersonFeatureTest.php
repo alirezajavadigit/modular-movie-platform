@@ -8,6 +8,7 @@ use Mockery;
 use Modules\Auth\Models\User;
 use Modules\Person\Contracts\PersonServiceInterface;
 use Modules\Person\Models\Person;
+use Modules\Person\Tests\Concerns\LoadsMediaLibrary;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
@@ -15,12 +16,14 @@ use Tests\TestCase;
 class PersonFeatureTest extends TestCase
 {
     use RefreshDatabase;
+    use LoadsMediaLibrary;
 
     private PersonServiceInterface $service;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->loadMediaLibraryMigration();
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $this->service = Mockery::mock(PersonServiceInterface::class);
@@ -41,7 +44,6 @@ class PersonFeatureTest extends TestCase
             array_merge([
                 'id'                   => 1,
                 'slug'                 => 'john-doe',
-                'image_path'           => null,
                 'date_of_birth'        => null,
                 'date_of_death'        => null,
                 'gender'               => null,
@@ -61,6 +63,7 @@ class PersonFeatureTest extends TestCase
         $person->shouldReceive('getTranslations')->with('last_name')->andReturn(['en' => 'Doe']);
         $person->shouldReceive('getTranslations')->with('biography')->andReturn([]);
         $person->shouldReceive('getTranslations')->with('place_of_birth')->andReturn([]);
+        $person->shouldReceive('getFirstMediaUrl')->andReturn('');
 
         return $person;
     }
@@ -216,7 +219,7 @@ class PersonFeatureTest extends TestCase
     public function test_update_modifies_person(): void
     {
         $person = Person::factory()->create();
-        $this->service->shouldReceive('update')->once()->with($person->id, Mockery::any())->andReturn($person);
+        $this->service->shouldReceive('update')->once()->with($person->id, Mockery::any(), null)->andReturn($person);
 
         $this->asAdmin()
             ->putJson("/api/v1/admin/persons/{$person->id}", ['first_name' => ['en' => 'Jane']])
