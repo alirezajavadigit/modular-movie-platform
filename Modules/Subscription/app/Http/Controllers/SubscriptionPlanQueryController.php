@@ -10,9 +10,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Subscription\Contracts\SubscriptionPlanServiceInterface;
 use Modules\Subscription\Http\Resources\Transformers\SubscriptionPlanTransformer;
+use Modules\Subscription\Models\SubscriptionPlan;
 
 class SubscriptionPlanQueryController extends Controller
 {
+    protected static string $modelClass = SubscriptionPlan::class;
     public function __construct(
         private readonly SubscriptionPlanServiceInterface $service,
         private readonly SubscriptionPlanTransformer      $transformer,
@@ -26,10 +28,16 @@ class SubscriptionPlanQueryController extends Controller
         return ApiResponse::paginated($plans, $this->transformer, __('subscription::messages.plans_index'));
     }
 
-    public function show(int $id): JsonResponse
+    public function publicIndex(Request $request): JsonResponse
     {
-        $plan = $this->service->findById($id);
+        $perPage = (int) $request->input('per_page', 15);
+        $plans   = $this->service->getActivePaginate($perPage);
 
-        return ApiResponse::fractal($plan, $this->transformer, __('subscription::messages.plan_show'));
+        return ApiResponse::paginated($plans, $this->transformer, __('subscription::messages.plans_index'));
+    }
+
+    public function publicShow(SubscriptionPlan $subscriptionPlan): JsonResponse
+    {
+        return ApiResponse::fractal($subscriptionPlan, $this->transformer, __('subscription::messages.plan_show'));
     }
 }
