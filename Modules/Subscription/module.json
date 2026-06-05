@@ -1,0 +1,11 @@
+{
+    "name": "Subscription",
+    "alias": "subscription",
+    "description": "Subscription plans and user subscriptions for movies website.",
+    "keywords": [],
+    "priority": 2,
+    "providers": [
+        "Modules\\Subscription\\Providers\\SubscriptionServiceProvider"
+    ],
+    "files": []
+}

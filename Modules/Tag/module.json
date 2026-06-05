@@ -1,0 +1,11 @@
+{
+    "name": "Tag",
+    "alias": "tag",
+    "description": "Tag management module with polymorphic relationships",
+    "keywords": [],
+    "priority": 3,
+    "providers": [
+        "Modules\\Tag\\Providers\\TagServiceProvider"
+    ],
+    "files": []
+}

@@ -1,0 +1,31 @@
+{
+    "name": "alirezajavadi/article",
+    "description": "Article management module",
+    "authors": [
+        {
+            "name": "Alireza Javadi",
+            "email": "alirezajavadigit@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Article\\": "app/",
+            "Modules\\Article\\Database\\Factories\\": "database/factories/",
+            "Modules\\Article\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Article\\Tests\\": "tests/"
+        }
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "name": "alirezajavadi/payment",
+    "description": "Payment module",
+    "authors": [
+        {
+            "name": "Alireza Javadi",
+            "email": "alirezajavadigit@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "zarinpal/zarinpal-php-sdk": "^1.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Payment\\": "app/",
+            "Modules\\Payment\\Database\\Factories\\": "database/factories/",
+            "Modules\\Payment\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Payment\\Tests\\": "tests/"
+        }
+    }
+}

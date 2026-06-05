@@ -1,0 +1,11 @@
+{
+    "name": "Movie",
+    "alias": "movie",
+    "description": "Movie management module with Movies, Serials, and Episodes",
+    "keywords": [],
+    "priority": 2,
+    "providers": [
+        "Modules\\Movie\\Providers\\MovieServiceProvider"
+    ],
+    "files": []
+}

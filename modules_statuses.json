@@ -1,0 +1,16 @@
+{
+    "Auth": true,
+    "Authorization": true,
+    "Movie": true,
+    "Article": true,
+    "Discussion": true,
+    "Category": true,
+    "Tag": true,
+    "Person": true,
+    "Favorite": true,
+    "Like": true,
+    "Payment": true,
+    "Subscription": true,
+    "Notification": true,
+    "User": true
+}

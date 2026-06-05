@@ -1,0 +1,16 @@
+{
+    "name": "Discussion",
+    "alias": "discussion",
+    "description": "Discussion module for managing polymorphic discussions, replies and moderation.",
+    "keywords": [
+        "discussion",
+        "comment",
+        "reply",
+        "moderation"
+    ],
+    "priority": 2,
+    "providers": [
+        "Modules\\Discussion\\Providers\\DiscussionServiceProvider"
+    ],
+    "files": []
+}

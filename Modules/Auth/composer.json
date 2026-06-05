@@ -1,0 +1,33 @@
+{
+    "name": "alirezajavadi/auth",
+    "description": "Authentication module with JWT, OTP, and Google OAuth",
+    "authors": [
+        {
+            "name": "Alireza Javadi",
+            "email": "alirezajavadigit@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "tymon/jwt-auth": "^2.0",
+        "laravel/socialite": "^5.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Auth\\": "app/",
+            "Modules\\Auth\\Database\\Factories\\": "database/factories/",
+            "Modules\\Auth\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Auth\\Tests\\": "tests/"
+        }
+    }
+}

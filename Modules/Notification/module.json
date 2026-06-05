@@ -1,0 +1,11 @@
+{
+    "name": "Notification",
+    "alias": "notification",
+    "description": "Polymorphic notification module with dynamic type and channel registration.",
+    "keywords": [],
+    "priority": 2,
+    "providers": [
+        "Modules\\Notification\\Providers\\NotificationServiceProvider"
+    ],
+    "files": []
+}

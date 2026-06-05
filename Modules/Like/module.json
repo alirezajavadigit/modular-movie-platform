@@ -1,0 +1,11 @@
+{
+    "name": "Like",
+    "alias": "like",
+    "description": "Manages user likes across polymorphic content types (movies, episodes, articles) with Fractal transformation and Spatie permission support.",
+    "keywords": ["like", "polymorphic", "reaction"],
+    "priority": 0,
+    "providers": [
+        "Modules\\Like\\Providers\\LikeServiceProvider"
+    ],
+    "files": []
+}

@@ -1,0 +1,11 @@
+{
+    "name": "Favorite",
+    "alias": "favorite",
+    "description": "Manages user favorites across polymorphic content types (movies, series, articles) with Fractal transformation and Spatie permission support.",
+    "keywords": ["favorite", "polymorphic", "wishlist"],
+    "priority": 0,
+    "providers": [
+        "Modules\\Favorite\\Providers\\FavoriteServiceProvider"
+    ],
+    "files": []
+}

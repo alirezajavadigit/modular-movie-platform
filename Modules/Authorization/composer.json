@@ -1,0 +1,32 @@
+{
+    "name": "alirezajavadi/authorization",
+    "description": "Authorization module with roles and permissions",
+    "authors": [
+        {
+            "name": "Alireza Javadi",
+            "email": "alirezajavadigit@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "spatie/laravel-permission": "^6.25"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Authorization\\": "app/",
+            "Modules\\Authorization\\Database\\Factories\\": "database/factories/",
+            "Modules\\Authorization\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Authorization\\Tests\\": "tests/"
+        }
+    }
+}

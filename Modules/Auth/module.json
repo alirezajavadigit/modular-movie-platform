@@ -1,0 +1,11 @@
+{
+    "name": "Auth",
+    "alias": "auth",
+    "description": "Authentication module with JWT, OTP, and Google OAuth",
+    "keywords": ["auth", "jwt", "otp", "oauth"],
+    "priority": 0,
+    "providers": [
+        "Modules\\Auth\\Providers\\AuthServiceProvider"
+    ],
+    "files": []
+}

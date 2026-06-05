@@ -1,0 +1,132 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: movies_app
+    container_name: movies_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ..:/var/www/html
+      - /var/www/html/vendor
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+    env_file:
+      - ../.env
+    networks:
+      - movies_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: movies_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ..:/var/www/html:ro
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - movies_net
+    depends_on:
+      - app
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: movies_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-movies_db}
+      POSTGRES_USER: ${DB_USERNAME:-movies_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME:-movies_user} -d ${DB_DATABASE:-movies_db}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - movies_net
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: movies_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+        --appendonly yes
+        --requirepass ${REDIS_PASSWORD:-redispassword}
+        --maxmemory 256mb
+        --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test:
+        ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redispassword}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - movies_net
+
+  queue:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: movies_app
+    container_name: movies_queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - ..:/var/www/html
+      - /var/www/html/vendor
+    env_file:
+      - ../.env
+    networks:
+      - movies_net
+    depends_on:
+      - app
+      - postgres
+      - redis
+
+  adminer:
+    image: adminer:4
+    container_name: movies_adminer
+    restart: unless-stopped
+    ports:
+      - "5050:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: movies_postgres
+      ADMINER_DESIGN: pepa-linha-dark
+    networks:
+      - movies_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  movies_net:
+    driver: bridge
