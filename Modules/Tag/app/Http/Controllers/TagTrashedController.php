@@ -10,9 +10,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Tag\Contracts\TagServiceInterface;
 use Modules\Tag\Http\Resources\Transformers\TagTransformer;
+use Modules\Tag\Models\Tag;
 
 class TagTrashedController extends Controller
 {
+    protected static string $modelClass = Tag::class;
     public function __construct(
         private readonly TagServiceInterface $tagService,
         private readonly TagTransformer $tagTransformer,
