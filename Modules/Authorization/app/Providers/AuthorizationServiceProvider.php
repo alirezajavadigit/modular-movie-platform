@@ -77,10 +77,6 @@ class AuthorizationServiceProvider extends ModuleServiceProvider
             module_path('Authorization', 'config/permission.php'),
             'permission',
         );
-        $this->app['router']->aliasMiddleware(
-            'auto.authorize',
-            \Modules\Authorization\Http\Middleware\AutoAuthorizeMiddleware::class,
-        );
         Route::middleware('api')
             ->group(module_path('Authorization', '/routes/api.php'));
     }
