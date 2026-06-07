@@ -17,6 +17,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Spatie\Translatable\HasTranslations;
+use Illuminate\Database\Eloquent\Builder;
 
 class Person extends Model implements HasMedia
 {
@@ -112,19 +113,30 @@ class Person extends Model implements HasMedia
         return trim($first . ' ' . $last);
     }
 
-    public function scopeActive($query)
+
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
     }
 
-    public function scopeByDepartment($query, string $department)
+    public function scopeInactive(Builder $query): Builder
+    {
+        return $query->where('is_active', false);
+    }
+
+    public function scopeByDepartment(Builder $query, string $department): Builder
     {
         return $query->where('known_for_department', $department);
     }
 
-    public function scopePopular($query)
+    public function scopePopular(Builder $query): Builder
     {
         return $query->orderByDesc('popularity');
+    }
+
+    public function scopeByGender(Builder $query, string $gender): Builder
+    {
+        return $query->where('gender', $gender);
     }
 
     protected static function newFactory(): PersonFactory

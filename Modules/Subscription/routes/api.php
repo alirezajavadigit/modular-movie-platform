@@ -24,7 +24,7 @@ Route::middleware(['api', 'auth:api'])->prefix('api/v1/subscriptions')->group(fu
     Route::patch('{subscription}/cancel', [SubscriptionStatusController::class, 'cancel']);
 });
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])
+Route::middleware(['api', 'auth:api'])
     ->prefix('api/v1/admin/subscriptions')
     ->group(function () {
         Route::get('trashed', [SubscriptionTrashedController::class, 'index']);
@@ -39,7 +39,7 @@ Route::middleware(['api', 'auth:api', 'auto.authorize'])
         Route::delete('{subscription}', [SubscriptionController::class, 'destroy']);
     });
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])
+Route::middleware(['api', 'auth:api'])
     ->prefix('api/v1/admin/subscription-plans')
     ->group(function () {
         Route::get('/', [SubscriptionPlanQueryController::class, 'index']);

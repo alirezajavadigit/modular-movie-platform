@@ -6,6 +6,7 @@ namespace Modules\Subscription\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Modules\Subscription\Contracts\SubscriptionPlanServiceInterface;
 use Modules\Subscription\DTOs\CreateSubscriptionPlanDTO;
@@ -17,6 +18,8 @@ use Modules\Subscription\Models\SubscriptionPlan;
 
 class SubscriptionPlanController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly SubscriptionPlanServiceInterface $service,
         private readonly SubscriptionPlanTransformer      $transformer,
@@ -24,6 +27,8 @@ class SubscriptionPlanController extends Controller
 
     public function store(StoreSubscriptionPlanRequest $request): JsonResponse
     {
+        $this->authorize('create', SubscriptionPlan::class);
+
         $validated = $request->validated();
 
         $dto = new CreateSubscriptionPlanDTO(
@@ -40,6 +45,8 @@ class SubscriptionPlanController extends Controller
 
     public function update(UpdateSubscriptionPlanRequest $request, SubscriptionPlan $subscriptionPlan): JsonResponse
     {
+        $this->authorize('update', $subscriptionPlan);
+
         $validated = $request->validated();
 
         $dto = new UpdateSubscriptionPlanDTO(
@@ -56,6 +63,8 @@ class SubscriptionPlanController extends Controller
 
     public function destroy(SubscriptionPlan $subscriptionPlan): JsonResponse
     {
+        $this->authorize('delete', $subscriptionPlan);
+
         $this->service->delete($subscriptionPlan);
 
         return ApiResponse::noContent(__('subscription::messages.plan_deleted'));

@@ -6,6 +6,7 @@ namespace Modules\Subscription\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Subscription\Contracts\SubscriptionServiceInterface;
@@ -14,6 +15,8 @@ use Modules\Subscription\Models\Subscription;
 
 class SubscriptionController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly SubscriptionServiceInterface $service,
         private readonly SubscriptionTransformer      $transformer,
@@ -21,6 +24,8 @@ class SubscriptionController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Subscription::class);
+
         $perPage       = (int) $request->input('per_page', 15);
         $subscriptions = $this->service->paginate($perPage);
 
@@ -29,11 +34,15 @@ class SubscriptionController extends Controller
 
     public function show(Subscription $subscription): JsonResponse
     {
+        $this->authorize('view', $subscription);
+
         return ApiResponse::fractal($subscription, $this->transformer, __('subscription::messages.show'));
     }
 
     public function destroy(Subscription $subscription): JsonResponse
     {
+        $this->authorize('delete', $subscription);
+
         $this->service->delete($subscription);
 
         return ApiResponse::noContent(__('subscription::messages.deleted'));

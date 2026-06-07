@@ -43,7 +43,14 @@ final class PersonRepository implements PersonRepositoryInterface
     public function getActive(int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->where('is_active', true)
+            ->active()
+            ->orderByDesc('popularity')
+            ->paginate($perPage);
+    }
+    public function getInactive(int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->inactive()
             ->orderByDesc('popularity')
             ->paginate($perPage);
     }
@@ -51,7 +58,7 @@ final class PersonRepository implements PersonRepositoryInterface
     public function getPopular(int $limit = 20): Collection
     {
         return $this->model->newQuery()
-            ->where('is_active', true)
+            ->active()
             ->orderByDesc('popularity')
             ->limit($limit)
             ->get();
@@ -60,8 +67,29 @@ final class PersonRepository implements PersonRepositoryInterface
     public function getByDepartment(string $department, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->where('known_for_department', $department)
-            ->where('is_active', true)
+            ->byDepartment($department)
+            ->active()
+            ->orderByDesc('popularity')
+            ->paginate($perPage);
+    }
+    
+    public function getByGender(string $gender, int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->byGender($gender)
+            ->active()
+            ->orderByDesc('popularity')
+            ->paginate($perPage);
+    }
+
+    public function searchAll(string $query, int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->where(function ($q) use ($query) {
+                $q->where('first_name', 'LIKE', "%{$query}%")
+                    ->orWhere('last_name', 'LIKE', "%{$query}%")
+                    ->orWhere('slug', 'LIKE', "%{$query}%");
+            })
             ->orderByDesc('popularity')
             ->paginate($perPage);
     }
@@ -69,7 +97,7 @@ final class PersonRepository implements PersonRepositoryInterface
     public function search(string $query, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->where('is_active', true)
+            ->active()
             ->where(function ($q) use ($query) {
                 $q->where('first_name', 'LIKE', "%{$query}%")
                     ->orWhere('last_name', 'LIKE', "%{$query}%")

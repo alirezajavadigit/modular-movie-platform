@@ -22,11 +22,17 @@ interface PersonRepositoryInterface
 
     public function getActive(int $perPage = 15): LengthAwarePaginator;
 
+    public function getInactive(int $perPage = 15): LengthAwarePaginator;
+
     public function getPopular(int $limit = 20): Collection;
 
     public function getByDepartment(string $department, int $perPage = 15): LengthAwarePaginator;
 
+    public function getByGender(string $gender, int $perPage = 15): LengthAwarePaginator;
+
     public function search(string $query, int $perPage = 15): LengthAwarePaginator;
+
+    public function searchAll(string $query, int $perPage = 15): LengthAwarePaginator;
 
     public function create(CreatePersonDTO $dto): Person;
 
