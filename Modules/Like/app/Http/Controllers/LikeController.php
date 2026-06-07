@@ -6,6 +6,7 @@ namespace Modules\Like\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Like\Contracts\LikeServiceInterface;
@@ -16,6 +17,8 @@ use Modules\Like\Models\Like;
 
 class LikeController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly LikeServiceInterface $service,
         private readonly LikeTransformer      $transformer,
@@ -23,6 +26,8 @@ class LikeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Like::class);
+
         $perPage = min((int) $request->input('per_page', config('like-module.per_page', 15)), 100);
         $likes   = $this->service->getUserLikes($request->user()->id, $perPage);
 
@@ -35,6 +40,8 @@ class LikeController extends Controller
 
     public function store(StoreLikeRequest $request): JsonResponse
     {
+        $this->authorize('create', Like::class);
+
         $dto = new CreateLikeDTO(
             userId: $request->user()->id,
             likeableId: $request->integer('likeable_id'),
@@ -66,6 +73,8 @@ class LikeController extends Controller
 
     public function destroy(Like $like): JsonResponse
     {
+        $this->authorize('delete', $like);
+
         $this->service->delete($like);
 
         return ApiResponse::noContent(__('like::messages.deleted'));
@@ -73,6 +82,8 @@ class LikeController extends Controller
 
     public function toggle(StoreLikeRequest $request): JsonResponse
     {
+        $this->authorize('create', Like::class);
+
         $dto = new CreateLikeDTO(
             userId: $request->user()->id,
             likeableId: $request->integer('likeable_id'),

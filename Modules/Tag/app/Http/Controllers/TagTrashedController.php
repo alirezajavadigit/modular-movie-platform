@@ -6,6 +6,7 @@ namespace Modules\Tag\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Tag\Contracts\TagServiceInterface;
@@ -14,7 +15,8 @@ use Modules\Tag\Models\Tag;
 
 class TagTrashedController extends Controller
 {
-    protected static string $modelClass = Tag::class;
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly TagServiceInterface $tagService,
         private readonly TagTransformer $tagTransformer,
@@ -22,6 +24,8 @@ class TagTrashedController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewTrashed', Tag::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $tags = $this->tagService->getTrashed($perPage);
 
@@ -34,6 +38,8 @@ class TagTrashedController extends Controller
 
     public function restore(int $id): JsonResponse
     {
+        $this->authorize('restore', Tag::withTrashed()->findOrFail($id));
+
         $tag = $this->tagService->restore($id);
 
         return ApiResponse::fractal(
@@ -45,6 +51,8 @@ class TagTrashedController extends Controller
 
     public function forceDelete(int $id): JsonResponse
     {
+        $this->authorize('forceDelete', Tag::withTrashed()->findOrFail($id));
+
         $this->tagService->forceDelete($id);
 
         return ApiResponse::noContent(__('tag::messages.force_deleted'));

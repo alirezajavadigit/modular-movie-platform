@@ -45,7 +45,15 @@ final class TagRepository implements TagRepositoryInterface
     public function getActive(int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->where('is_active', true)
+            ->active()
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    public function getInactive(int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->inactive()
             ->latest()
             ->paginate($perPage);
     }
@@ -60,10 +68,21 @@ final class TagRepository implements TagRepositoryInterface
             ->get();
     }
 
+    public function searchAll(string $query, int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                    ->orWhere('description', 'LIKE', "%{$query}%");
+            })
+            ->latest()
+            ->paginate($perPage);
+    }
+
     public function search(string $query, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->where('is_active', true)
+            ->active()
             ->where(function ($q) use ($query) {
                 $q->where('name', 'LIKE', "%{$query}%")
                     ->orWhere('description', 'LIKE', "%{$query}%");

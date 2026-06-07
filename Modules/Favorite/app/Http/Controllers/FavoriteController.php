@@ -6,6 +6,7 @@ namespace Modules\Favorite\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Favorite\Contracts\FavoriteServiceInterface;
@@ -16,6 +17,8 @@ use Modules\Favorite\Models\Favorite;
 
 class FavoriteController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly FavoriteServiceInterface $service,
         private readonly FavoriteTransformer      $transformer,
@@ -23,7 +26,8 @@ class FavoriteController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        
+        $this->authorize('viewAny', Favorite::class);
+
         $perPage   = min((int) $request->input('per_page', config('favorite.per_page', 15)), 100);
         $favorites = $this->service->getUserFavorites($request->user()->id, $perPage);
 
@@ -36,6 +40,8 @@ class FavoriteController extends Controller
 
     public function store(StoreFavoriteRequest $request): JsonResponse
     {
+        $this->authorize('create', Favorite::class);
+
         $dto = CreateFavoriteDTO::fromRequest(
             userId: $request->user()->id,
             favoriteableId: $request->integer('favoriteable_id'),
@@ -67,6 +73,8 @@ class FavoriteController extends Controller
 
     public function destroy(Favorite $favorite): JsonResponse
     {
+        $this->authorize('delete', $favorite);
+
         $this->service->delete($favorite);
 
         return ApiResponse::noContent(__('favorite::messages.deleted'));
@@ -74,6 +82,8 @@ class FavoriteController extends Controller
 
     public function toggle(StoreFavoriteRequest $request): JsonResponse
     {
+        $this->authorize('create', Favorite::class);
+
         $dto = CreateFavoriteDTO::fromRequest(
             userId: $request->user()->id,
             favoriteableId: $request->integer('favoriteable_id'),

@@ -53,12 +53,30 @@ final class TagService implements TagServiceInterface
         return $this->repository->getActive($perPage);
     }
 
+    public function getInactive(int $perPage = 15): LengthAwarePaginator
+    {
+        $this->guardPerPage($perPage);
+        return $this->repository->getInactive($perPage);
+    }
+
     public function getPopular(int $limit = 10): Collection
     {
         if ($limit < 1 || $limit > 100) {
             throw new InvalidArgumentException('Limit must be between 1 and 100.');
         }
         return $this->repository->getPopular($limit);
+    }
+
+    public function searchAll(string $query, int $perPage = 15): LengthAwarePaginator
+    {
+        if (trim($query) === '') {
+            throw new InvalidArgumentException('Search query cannot be empty.');
+        }
+        if (mb_strlen($query) < 2) {
+            throw new InvalidArgumentException('Search query must be at least 2 characters.');
+        }
+        $this->guardPerPage($perPage);
+        return $this->repository->searchAll($query, $perPage);
     }
 
     public function search(string $query, int $perPage = 15): LengthAwarePaginator

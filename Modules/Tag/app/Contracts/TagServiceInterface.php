@@ -20,9 +20,13 @@ interface TagServiceInterface
 
     public function getActive(int $perPage = 15): LengthAwarePaginator;
 
+    public function getInactive(int $perPage = 15): LengthAwarePaginator;
+
     public function getPopular(int $limit = 10): Collection;
 
     public function search(string $query, int $perPage = 15): LengthAwarePaginator;
+
+    public function searchAll(string $query, int $perPage = 15): LengthAwarePaginator;
 
     public function store(CreateTagDTO $dto): Tag;
 
