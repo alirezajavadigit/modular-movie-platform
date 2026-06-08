@@ -6,7 +6,7 @@ use Modules\Authorization\Http\Controllers\RoleController;
 use Modules\Authorization\Http\Controllers\RolePermissionController;
 use Modules\Authorization\Http\Controllers\UserAuthorizationController;
 
-Route::middleware(['auth:api', 'auto.authorize'])
+Route::middleware(['auth:api'])
     ->prefix('api/v1')
     ->name('api.')
     ->group(function () {
