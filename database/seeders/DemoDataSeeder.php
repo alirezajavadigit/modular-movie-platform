@@ -140,7 +140,7 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        foreach (['super-admin', 'admin', 'editor', 'subscriber', 'user'] as $name) {
+        foreach (['super_admin', 'admin', 'editor', 'subscriber', 'user'] as $name) {
             $this->roles[$name] = Role::firstOrCreate(['name' => $name, 'guard_name' => 'api']);
         }
 
@@ -163,7 +163,7 @@ class DemoDataSeeder extends Seeder
             'email' => 'admin@flixmovie.test',
             'phone' => '+989120000001',
         ]);
-        $superAdmin->assignRole($this->roles['super-admin']);
+        $superAdmin->assignRole($this->roles['super_admin']);
 
         User::factory()->count(self::ADMINS)->create()->each(
             fn(User $user) => $user->assignRole($this->roles['admin']),
@@ -737,9 +737,9 @@ class DemoDataSeeder extends Seeder
 
     private function morphTargets(bool $includeEpisodes = true): array
     {
-        $movieType = (new Movie())->getMorphClass();
-        $articleType = (new Article())->getMorphClass();
-        $episodeType = (new Episode())->getMorphClass();
+        $movieType = \Modules\Movie\Models\Movie::class;
+        $articleType = \Modules\Article\Models\Article::class;
+        $episodeType = \Modules\Movie\Models\Episode::class;
 
         $targets = [];
         foreach ($this->movieIds as $id) {
@@ -772,8 +772,8 @@ class DemoDataSeeder extends Seeder
     private function seedDiscussions(): void
     {
         $userIds = User::role($this->roles['user'])->pluck('id')->all();
-        $movieType = (new Movie())->getMorphClass();
-        $articleType = (new Article())->getMorphClass();
+        $movieType = \Modules\Movie\Models\Movie::class;
+        $articleType = \Modules\Article\Models\Article::class;
 
         $threads = [];
         foreach ($this->movieIds as $id) {
