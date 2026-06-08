@@ -19,6 +19,8 @@ use Modules\Discussion\Models\Discussion;
 
 class DiscussionController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly DiscussionServiceInterface $service,
         private readonly DiscussionTransformer $transformer,
@@ -26,6 +28,8 @@ class DiscussionController extends Controller
 
     public function store(StoreDiscussionRequest $request): JsonResponse
     {
+        $this->authorize('create', Discussion::class);
+
         $autoApprove = (bool) config('discussion-module.auto_approve', false);
 
         $dto = new CreateDiscussionDTO(
@@ -49,6 +53,8 @@ class DiscussionController extends Controller
 
     public function show(Discussion $discussion): JsonResponse
     {
+        $this->authorize('view', $discussion);
+
         return ApiResponse::fractal(
             $discussion->load(['user', 'approvedReplies.user']),
             $this->transformer,
@@ -58,6 +64,8 @@ class DiscussionController extends Controller
 
     public function update(UpdateDiscussionRequest $request, Discussion $discussion): JsonResponse
     {
+        $this->authorize('update', $discussion);
+
         $dto = new UpdateDiscussionDTO(
             body: $request->input('body'),
             status: $request->filled('status')
@@ -76,6 +84,8 @@ class DiscussionController extends Controller
 
     public function destroy(Discussion $discussion): JsonResponse
     {
+        $this->authorize('delete', $discussion);
+
         $this->service->delete($discussion);
 
         return ApiResponse::success(null, __('discussion::messages.deleted'));

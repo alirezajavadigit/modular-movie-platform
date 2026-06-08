@@ -6,6 +6,7 @@ namespace Modules\Discussion\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Modules\Discussion\Contracts\DiscussionServiceInterface;
 use Modules\Discussion\Http\Resources\Transformers\DiscussionTransformer;
@@ -13,7 +14,7 @@ use Modules\Discussion\Models\Discussion;
 
 class DiscussionStatusController extends Controller
 {
-    public static string $modelClass = Discussion::class;
+    use AuthorizesRequests;
 
     public function __construct(
         private readonly DiscussionServiceInterface $service,
@@ -22,6 +23,8 @@ class DiscussionStatusController extends Controller
 
     public function approve(Discussion $discussion): JsonResponse
     {
+        $this->authorize('approve', $discussion);
+
         $this->service->approve($discussion);
 
         return ApiResponse::fractal(
@@ -33,6 +36,8 @@ class DiscussionStatusController extends Controller
 
     public function reject(Discussion $discussion): JsonResponse
     {
+        $this->authorize('reject', $discussion);
+
         $this->service->reject($discussion);
 
         return ApiResponse::fractal(
@@ -44,6 +49,8 @@ class DiscussionStatusController extends Controller
 
     public function markAsPending(Discussion $discussion): JsonResponse
     {
+        $this->authorize('markAsPending', $discussion);
+
         $this->service->markAsPending($discussion);
 
         return ApiResponse::fractal(
