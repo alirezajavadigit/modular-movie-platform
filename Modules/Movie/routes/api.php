@@ -21,7 +21,7 @@ Route::prefix('api/v1')
                 ->name('movies.episodes.show');
         });
 
-        Route::middleware(['auth:api', 'auto.authorize'])->group(function () {
+        Route::middleware(['auth:api'])->group(function () {
             Route::apiResource('movies', MovieController::class)
                 ->except(['index', 'show']);
             Route::post('movies/{movie}/restore', [MovieController::class, 'restore'])

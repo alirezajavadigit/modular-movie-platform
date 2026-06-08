@@ -4,9 +4,11 @@ namespace Modules\Movie\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Modules\Movie\Contracts\EpisodeServiceInterface;
 use Modules\Movie\Contracts\FileUploadServiceInterface;
+use Modules\Movie\Models\Episode;
 use Modules\Movie\DTOs\CreateEpisodeDTO;
 use Modules\Movie\DTOs\UpdateEpisodeDTO;
 use Modules\Movie\Http\Requests\StoreEpisodeRequest;
@@ -15,6 +17,8 @@ use Modules\Movie\Http\Resources\Transformers\EpisodeTransformer;
 
 class EpisodeController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly EpisodeServiceInterface $episodeService,
         private readonly FileUploadServiceInterface $fileUploadService,
@@ -33,6 +37,8 @@ class EpisodeController extends Controller
 
     public function store(StoreEpisodeRequest $request, int $movie): JsonResponse
     {
+        $this->authorize('create', Episode::class);
+
         $poster = $this->resolvePoster($request);
 
         $dto = new CreateEpisodeDTO(
@@ -69,6 +75,8 @@ class EpisodeController extends Controller
     public function update(UpdateEpisodeRequest $request, int $movie, int $episodeId): JsonResponse
     {
         $episode = $this->episodeService->getEpisodeById($movie, $episodeId);
+        $this->authorize('update', $episode);
+
         $poster = $this->resolvePoster($request);
 
         if ($poster && $episode->poster && $poster !== $episode->poster) {
@@ -96,6 +104,8 @@ class EpisodeController extends Controller
 
     public function destroy(int $movie, int $episode): JsonResponse
     {
+        $this->authorize('delete', Episode::findOrFail($episode));
+
         $this->episodeService->deleteEpisode($movie, $episode);
 
         return ApiResponse::noContent(
@@ -105,6 +115,8 @@ class EpisodeController extends Controller
 
     public function restore(int $movie, int $episode): JsonResponse
     {
+        $this->authorize('restore', Episode::class);
+
         $episode = $this->episodeService->restoreEpisode($movie, $episode);
 
         return ApiResponse::fractal(
