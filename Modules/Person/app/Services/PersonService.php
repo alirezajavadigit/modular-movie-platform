@@ -54,6 +54,12 @@ final class PersonService implements PersonServiceInterface
         return $this->repository->getActive($perPage);
     }
 
+    public function getInactive(int $perPage = 15): LengthAwarePaginator
+    {
+        $this->guardPerPage($perPage);
+        return $this->repository->getInactive($perPage);
+    }
+
     public function getPopular(int $limit = 20): Collection
     {
         if ($limit < 1 || $limit > 100) {
@@ -69,6 +75,27 @@ final class PersonService implements PersonServiceInterface
         }
         $this->guardPerPage($perPage);
         return $this->repository->getByDepartment($department, $perPage);
+    }
+
+    public function getByGender(string $gender, int $perPage = 15): LengthAwarePaginator
+    {
+        if (trim($gender) === '') {
+            throw new InvalidArgumentException('Gender cannot be empty.');
+        }
+        $this->guardPerPage($perPage);
+        return $this->repository->getByGender($gender, $perPage);
+    }
+
+    public function searchAll(string $query, int $perPage = 15): LengthAwarePaginator
+    {
+        if (trim($query) === '') {
+            throw new InvalidArgumentException('Search query cannot be empty.');
+        }
+        if (mb_strlen($query) < 2) {
+            throw new InvalidArgumentException('Search query must be at least 2 characters.');
+        }
+        $this->guardPerPage($perPage);
+        return $this->repository->searchAll($query, $perPage);
     }
 
     public function search(string $query, int $perPage = 15): LengthAwarePaginator

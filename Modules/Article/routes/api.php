@@ -17,7 +17,7 @@ Route::middleware('api')->prefix('api/v1/articles')->group(function () {
     Route::get('search', [ArticleQueryController::class, 'search']);
 });
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/articles')->group(function () {
+Route::middleware(['api', 'auth:api'])->prefix('api/v1/admin/articles')->group(function () {
     Route::get('drafts', [ArticleQueryController::class, 'drafts']);
     Route::get('archived', [ArticleQueryController::class, 'archived']);
     Route::get('status/{status}', [ArticleQueryController::class, 'byStatus']);

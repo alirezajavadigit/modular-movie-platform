@@ -25,6 +25,8 @@ interface CategoryServiceInterface
     public function getTree(): Collection;
 
     public function search(string $query, int $perPage = 15): LengthAwarePaginator;
+    
+    public function searchAll(string $query, int $perPage = 15): LengthAwarePaginator;
 
     public function store(CreateCategoryDTO $dto): Category;
 

@@ -6,6 +6,7 @@ namespace Modules\User\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Auth\Models\User;
@@ -18,7 +19,7 @@ use Modules\User\Http\Resources\Transformers\UserTransformer;
 
 class UserController extends Controller
 {
-    public static string $modelClass = \Modules\Auth\Models\User::class;
+    use AuthorizesRequests;
 
     public function __construct(
         private readonly UserServiceInterface $service,
@@ -27,6 +28,8 @@ class UserController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', User::class);
+
         $users = $this->service->paginate($this->perPage($request));
 
         return ApiResponse::paginated($users, $this->transformer, __('user::messages.index'));
@@ -34,6 +37,8 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): JsonResponse
     {
+        $this->authorize('create', User::class);
+
         $dto = new CreateUserDTO(
             name: $request->validated('name'),
             email: $request->validated('email'),
@@ -49,6 +54,8 @@ class UserController extends Controller
 
     public function show(User $user): JsonResponse
     {
+        $this->authorize('view', $user);
+
         return ApiResponse::fractal(
             $this->service->findById($user->id),
             $this->transformer,
@@ -58,6 +65,8 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
+        $this->authorize('update', $user);
+
         $dto = new UpdateUserDTO(
             name: $request->validated('name'),
             email: $request->validated('email'),
@@ -73,6 +82,8 @@ class UserController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
+        $this->authorize('delete', $user);
+
         $this->service->delete($user->id);
 
         return ApiResponse::noContent(__('user::messages.deleted'));

@@ -8,7 +8,7 @@ use Modules\Notification\Http\Controllers\NotificationQueryController;
 use Modules\Notification\Http\Controllers\NotificationStatusController;
 use Modules\Notification\Http\Controllers\NotificationTrashedController;
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])
+Route::middleware(['api', 'auth:api'])
     ->prefix('api/v1/admin/notifications')
     ->group(function () {
 

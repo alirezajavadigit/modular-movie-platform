@@ -6,6 +6,7 @@ namespace Modules\Person\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Person\Contracts\PersonServiceInterface;
@@ -14,7 +15,8 @@ use Modules\Person\Models\Person;
 
 class PersonTrashedController extends Controller
 {
-    protected static string $modelClass = Person::class;
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly PersonServiceInterface $service,
         private readonly PersonTransformer $transformer,
@@ -22,6 +24,8 @@ class PersonTrashedController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewTrashed', Person::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $persons = $this->service->getTrashed($perPage);
 
@@ -30,6 +34,8 @@ class PersonTrashedController extends Controller
 
     public function restore(int $id): JsonResponse
     {
+        $this->authorize('restore', Person::withTrashed()->findOrFail($id));
+
         $person = $this->service->restore($id);
 
         return ApiResponse::fractal($person, $this->transformer, __('person::messages.restored'));
@@ -37,6 +43,8 @@ class PersonTrashedController extends Controller
 
     public function forceDelete(int $id): JsonResponse
     {
+        $this->authorize('forceDelete', Person::withTrashed()->findOrFail($id));
+
         $this->service->forceDelete($id);
 
         return ApiResponse::noContent(__('person::messages.force_deleted'));

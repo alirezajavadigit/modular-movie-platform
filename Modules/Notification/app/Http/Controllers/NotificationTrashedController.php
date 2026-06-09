@@ -6,6 +6,7 @@ namespace Modules\Notification\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Notification\Contracts\NotificationServiceInterface;
@@ -14,7 +15,7 @@ use Modules\Notification\Models\Notification;
 
 class NotificationTrashedController extends Controller
 {
-    protected static string $modelClass = Notification::class;
+    use AuthorizesRequests;
 
     public function __construct(
         private readonly NotificationServiceInterface $service,
@@ -23,6 +24,8 @@ class NotificationTrashedController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewTrashed', Notification::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $items   = $this->service->getTrashed($perPage);
 
@@ -31,6 +34,8 @@ class NotificationTrashedController extends Controller
 
     public function restore(Notification $notification): JsonResponse
     {
+        $this->authorize('restore', $notification);
+
         $restored = $this->service->restore($notification->id);
 
         return ApiResponse::fractal($restored, $this->transformer, __('notification::messages.restored'));
@@ -38,6 +43,8 @@ class NotificationTrashedController extends Controller
 
     public function forceDelete(Notification $notification): JsonResponse
     {
+        $this->authorize('forceDelete', $notification);
+
         $this->service->forceDelete($notification->id);
 
         return ApiResponse::noContent(__('notification::messages.force_deleted'));

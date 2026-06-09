@@ -7,7 +7,7 @@ use Modules\User\Http\Controllers\UserController;
 use Modules\User\Http\Controllers\UserQueryController;
 use Modules\User\Http\Controllers\UserTrashedController;
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/users')->group(function () {
+Route::middleware(['api', 'auth:api'])->prefix('api/v1/admin/users')->group(function () {
     Route::get('search', [UserQueryController::class, 'search']);
     Route::get('trashed', [UserTrashedController::class, 'index']);
 

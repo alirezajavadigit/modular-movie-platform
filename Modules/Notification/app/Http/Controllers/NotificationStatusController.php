@@ -6,6 +6,7 @@ namespace Modules\Notification\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Notification\Contracts\NotificationServiceInterface;
@@ -14,7 +15,7 @@ use Modules\Notification\Models\Notification;
 
 class NotificationStatusController extends Controller
 {
-    protected static string $modelClass = Notification::class;
+    use AuthorizesRequests;
 
     public function __construct(
         private readonly NotificationServiceInterface $service,
@@ -23,6 +24,8 @@ class NotificationStatusController extends Controller
 
     public function markRead(Notification $notification): JsonResponse
     {
+        $this->authorize('markRead', $notification);
+
         $updated = $this->service->markAsRead($notification->id);
 
         return ApiResponse::fractal($updated, $this->transformer, __('notification::messages.read'));
@@ -30,6 +33,8 @@ class NotificationStatusController extends Controller
 
     public function markAllRead(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Notification::class);
+
         $notifiableType = (string) $request->input('notifiable_type');
         $notifiableId   = (int) $request->input('notifiable_id');
 

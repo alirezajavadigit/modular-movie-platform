@@ -4,10 +4,13 @@ namespace Modules\Authorization\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Modules\Authorization\Contracts\PermissionAssignmentServiceInterface;
 use Modules\Authorization\Contracts\RoleAssignmentServiceInterface;
 use Modules\Authorization\DTOs\AssignPermissionDTO;
+use Modules\Authorization\Models\Permission;
+use Modules\Authorization\Models\Role;
 use Modules\Authorization\DTOs\AssignRoleDTO;
 use Modules\Authorization\DTOs\RevokePermissionDTO;
 use Modules\Authorization\DTOs\RevokeRoleDTO;
@@ -22,6 +25,7 @@ use Modules\Authorization\Http\Resources\Transformers\RoleTransformer;
 
 class UserAuthorizationController extends Controller
 {
+    use AuthorizesRequests;
     public function __construct(
         private readonly RoleAssignmentServiceInterface $roleAssignmentService,
         private readonly PermissionAssignmentServiceInterface $permissionAssignmentService,
@@ -29,6 +33,8 @@ class UserAuthorizationController extends Controller
 
     public function assignRoles(AssignRoleRequest $request, int $userId): JsonResponse
     {
+        $this->authorize('assignToUser', Role::class);
+
         $dto = new AssignRoleDTO(
             userId: $userId,
             roleNames: $request->validated('roles'),
@@ -45,6 +51,8 @@ class UserAuthorizationController extends Controller
 
     public function revokeRoles(RevokeRoleRequest $request, int $userId): JsonResponse
     {
+        $this->authorize('revokeFromUser', Role::class);
+
         $dto = new RevokeRoleDTO(
             userId: $userId,
             roleNames: $request->validated('roles'),
@@ -61,13 +69,14 @@ class UserAuthorizationController extends Controller
 
     public function syncRoles(SyncRoleRequest $request, int $userId): JsonResponse
     {
+        $this->authorize('assignToUser', Role::class);
+
         $dto = new SyncRoleDTO(
             userId: $userId,
             roleNames: $request->validated('roles'),
         );
 
         $user = $this->roleAssignmentService->syncRoles($dto);
-
         return ApiResponse::fractal(
             $user->roles,
             new RoleTransformer(),
@@ -77,6 +86,8 @@ class UserAuthorizationController extends Controller
 
     public function assignPermissions(AssignPermissionRequest $request, int $userId): JsonResponse
     {
+        $this->authorize('assignToUser', Permission::class);
+
         $dto = new AssignPermissionDTO(
             userId: $userId,
             permissionNames: $request->validated('permissions'),
@@ -93,6 +104,8 @@ class UserAuthorizationController extends Controller
 
     public function revokePermissions(RevokePermissionRequest $request, int $userId): JsonResponse
     {
+        $this->authorize('revokeFromUser', Permission::class);
+
         $dto = new RevokePermissionDTO(
             userId: $userId,
             permissionNames: $request->validated('permissions'),
@@ -109,6 +122,8 @@ class UserAuthorizationController extends Controller
 
     public function getUserRoles(int $userId): JsonResponse
     {
+        $this->authorize('viewAny', Role::class);
+
         $roles = $this->roleAssignmentService->getUserRoles($userId);
 
         return ApiResponse::fractal(
@@ -120,6 +135,8 @@ class UserAuthorizationController extends Controller
 
     public function getUserPermissions(int $userId): JsonResponse
     {
+        $this->authorize('viewAny', Permission::class);
+
         $permissions = $this->permissionAssignmentService->getUserPermissions($userId);
 
         return ApiResponse::fractal(

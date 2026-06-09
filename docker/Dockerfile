@@ -46,6 +46,8 @@ COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 COPY docker/php/php.ini          /usr/local/etc/php/conf.d/99-custom.ini
 COPY docker/php/opcache.ini      /usr/local/etc/php/conf.d/99-opcache.ini
 COPY docker/php/supervisord.conf /etc/supervisord.conf
+COPY docker/php/entrypoint.sh   /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR /var/www/html
 
@@ -58,4 +60,5 @@ RUN composer dump-autoload --optimize \
     && chmod -R 775 storage bootstrap/cache
 
 EXPOSE 9000
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["php-fpm"]

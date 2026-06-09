@@ -6,6 +6,7 @@ namespace Modules\Notification\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Notification\Contracts\NotificationServiceInterface;
@@ -19,6 +20,8 @@ use Modules\Notification\Models\Notification;
 
 class NotificationController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly NotificationServiceInterface $service,
         private readonly NotificationTransformer $transformer,
@@ -26,6 +29,8 @@ class NotificationController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Notification::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $items   = $this->service->paginate($perPage);
 
@@ -34,6 +39,8 @@ class NotificationController extends Controller
 
     public function store(StoreNotificationRequest $request): JsonResponse
     {
+        $this->authorize('create', Notification::class);
+
         $validated = $request->validated();
 
         $dto = new CreateNotificationDTO(
@@ -51,11 +58,15 @@ class NotificationController extends Controller
 
     public function show(Notification $notification): JsonResponse
     {
+        $this->authorize('view', $notification);
+
         return ApiResponse::fractal($notification, $this->transformer, __('notification::messages.show'));
     }
 
     public function update(UpdateNotificationRequest $request, Notification $notification): JsonResponse
     {
+        $this->authorize('update', $notification);
+
         $validated = $request->validated();
 
         $dto = new UpdateNotificationDTO(
@@ -71,6 +82,8 @@ class NotificationController extends Controller
 
     public function destroy(Notification $notification): JsonResponse
     {
+        $this->authorize('delete', $notification);
+
         $this->service->delete($notification->id);
 
         return ApiResponse::noContent(__('notification::messages.deleted'));

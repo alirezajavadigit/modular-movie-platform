@@ -71,6 +71,15 @@ class CategoryPolicy
         }
     }
 
+    public function active(User $user, Category $category): bool
+    {
+        try {
+            return $user->hasPermissionTo('categories.active');
+        } catch (PermissionDoesNotExist) {
+            return false;
+        }
+    }
+
     public function activate(User $user, Category $category): bool
     {
         try {

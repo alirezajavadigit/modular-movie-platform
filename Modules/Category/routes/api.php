@@ -15,11 +15,12 @@ Route::middleware('api')->prefix('api/v1/categories')->group(function () {
     Route::get('parent/{parentId?}', [CategoryQueryController::class, 'byParent']);
 });
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/categories')->group(function () {
+Route::middleware(['api', 'auth:api'])->prefix('api/v1/admin/categories')->group(function () {
     Route::get('trashed', [CategoryTrashedController::class, 'index']);
     Route::patch('{category}/restore', [CategoryTrashedController::class, 'restore']);
     Route::delete('{category}/force-delete', [CategoryTrashedController::class, 'forceDelete']);
-
+    Route::get('active', [CategoryQueryController::class, 'active']);
+    Route::get('inactive', [CategoryQueryController::class, 'inactive']);
 
     Route::get('/', [CategoryController::class, 'index']);
     Route::post('/', [CategoryController::class, 'store']);

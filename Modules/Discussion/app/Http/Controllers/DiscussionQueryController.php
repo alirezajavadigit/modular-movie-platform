@@ -6,6 +6,7 @@ namespace Modules\Discussion\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Discussion\Contracts\DiscussionServiceInterface;
@@ -14,7 +15,7 @@ use Modules\Discussion\Models\Discussion;
 
 class DiscussionQueryController extends Controller
 {
-    public static string $modelClass = Discussion::class;
+    use AuthorizesRequests;
 
     public function __construct(
         private readonly DiscussionServiceInterface $service,
@@ -23,6 +24,8 @@ class DiscussionQueryController extends Controller
 
     public function byDiscussionable(Request $request, string $discussionableType, int $discussionableId): JsonResponse
     {
+        $this->authorize('viewAny', Discussion::class);
+
         $perPage = $this->perPage($request);
         $discussions = $this->service->getApprovedByDiscussionable($discussionableType, $discussionableId, $perPage);
 
@@ -35,6 +38,8 @@ class DiscussionQueryController extends Controller
 
     public function byUser(Request $request, int $userId): JsonResponse
     {
+        $this->authorize('viewAny', Discussion::class);
+
         $perPage = $this->perPage($request);
         $discussions = $this->service->getByUser($userId, $perPage);
 
@@ -58,6 +63,8 @@ class DiscussionQueryController extends Controller
 
     public function approved(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Discussion::class);
+
         $perPage = $this->perPage($request);
         $discussions = $this->service->getApproved($perPage);
 
@@ -70,6 +77,8 @@ class DiscussionQueryController extends Controller
 
     public function rejected(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Discussion::class);
+
         $perPage = $this->perPage($request);
         $discussions = $this->service->getRejected($perPage);
 
@@ -82,6 +91,8 @@ class DiscussionQueryController extends Controller
 
     public function pending(Request $request): JsonResponse
     {
+        $this->authorize('viewPending', Discussion::class);
+
         $perPage = $this->perPage($request);
         $discussions = $this->service->getPending($perPage);
 

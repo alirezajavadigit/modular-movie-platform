@@ -6,8 +6,8 @@ namespace Modules\Subscription\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Gate;
 use Modules\Subscription\Contracts\SubscriptionServiceInterface;
 use Modules\Subscription\DTOs\CreateSubscriptionDTO;
 use Modules\Subscription\Http\Requests\StoreSubscriptionRequest;
@@ -16,7 +16,7 @@ use Modules\Subscription\Models\Subscription;
 
 class SubscriptionStatusController extends Controller
 {
-    protected static string $modelClass = Subscription::class;
+    use AuthorizesRequests;
 
     public function __construct(
         private readonly SubscriptionServiceInterface $service,
@@ -25,6 +25,8 @@ class SubscriptionStatusController extends Controller
 
     public function subscribe(StoreSubscriptionRequest $request): JsonResponse
     {
+        $this->authorize('create', Subscription::class);
+
         $validated = $request->validated();
 
         $dto = new CreateSubscriptionDTO(
@@ -40,6 +42,8 @@ class SubscriptionStatusController extends Controller
 
     public function activate(Subscription $subscription): JsonResponse
     {
+        $this->authorize('activate', $subscription);
+
         $subscription = $this->service->activate($subscription);
 
         return ApiResponse::fractal($subscription, $this->transformer, __('subscription::messages.activated'));
@@ -47,7 +51,7 @@ class SubscriptionStatusController extends Controller
 
     public function cancel(Subscription $subscription): JsonResponse
     {
-        Gate::authorize('cancel', $subscription);
+        $this->authorize('cancel', $subscription);
 
         $subscription = $this->service->cancel($subscription);
 

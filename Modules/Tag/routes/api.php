@@ -14,11 +14,12 @@ Route::middleware('api')->prefix('api/v1/tags')->group(function () {
     Route::get('slug/{slug}', [TagQueryController::class, 'findBySlug']);
 });
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/tags')->group(function () {
+Route::middleware(['api', 'auth:api'])->prefix('api/v1/admin/tags')->group(function () {
     Route::get('trashed', [TagTrashedController::class, 'index']);
     Route::patch('{tag}/restore', [TagTrashedController::class, 'restore']);
     Route::delete('{tag}/force-delete', [TagTrashedController::class, 'forceDelete']);
-
+    Route::get('active', [TagQueryController::class, 'active']);
+    Route::get('inactive', [TagQueryController::class, 'inactive']);
 
     Route::get('/', [TagController::class, 'index']);
     Route::post('/', [TagController::class, 'store']);

@@ -6,6 +6,7 @@ namespace Modules\Discussion\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Modules\Discussion\Contracts\DiscussionServiceInterface;
 use Modules\Discussion\Http\Resources\Transformers\DiscussionTransformer;
@@ -13,7 +14,7 @@ use Modules\Discussion\Models\Discussion;
 
 class DiscussionTrashedController extends Controller
 {
-    public static string $modelClass = Discussion::class;
+    use AuthorizesRequests;
 
     public function __construct(
         private readonly DiscussionServiceInterface $service,
@@ -22,6 +23,8 @@ class DiscussionTrashedController extends Controller
 
     public function restore(Discussion $discussion): JsonResponse
     {
+        $this->authorize('restore', Discussion::class);
+
         $this->service->restore($discussion);
 
         return ApiResponse::fractal(
@@ -33,6 +36,7 @@ class DiscussionTrashedController extends Controller
 
     public function forceDelete(Discussion $discussion): JsonResponse
     {
+        $this->authorize('forceDelete', $discussion);
 
         $this->service->forceDelete($discussion);
 

@@ -4,9 +4,11 @@ namespace Modules\Movie\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Modules\Movie\Contracts\FileUploadServiceInterface;
 use Modules\Movie\Contracts\MovieServiceInterface;
+use Modules\Movie\Models\Movie;
 use Modules\Movie\DTOs\CreateMovieDTO;
 use Modules\Movie\DTOs\UpdateMovieDTO;
 use Modules\Movie\Enums\BadgeType;
@@ -17,6 +19,8 @@ use Modules\Movie\Http\Resources\Transformers\MovieTransformer;
 
 class MovieController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly MovieServiceInterface $movieService,
         private readonly FileUploadServiceInterface $fileUploadService,
@@ -35,6 +39,8 @@ class MovieController extends Controller
 
     public function store(StoreMovieRequest $request): JsonResponse
     {
+        $this->authorize('create', Movie::class);
+
         $poster = $this->resolvePoster($request);
 
         $dto = new CreateMovieDTO(
@@ -74,6 +80,8 @@ class MovieController extends Controller
     public function update(UpdateMovieRequest $request, int $id): JsonResponse
     {
         $movie = $this->movieService->getMovieById($id);
+        $this->authorize('update', $movie);
+
         $poster = $this->resolvePoster($request);
         if ($poster && $movie->poster && $poster !== $movie->poster) {
             $this->fileUploadService->delete($movie->poster);
@@ -103,6 +111,8 @@ class MovieController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        $this->authorize('delete', Movie::findOrFail($id));
+
         $this->movieService->deleteMovie($id);
 
         return ApiResponse::noContent(
@@ -112,6 +122,8 @@ class MovieController extends Controller
 
     public function restore(int $id): JsonResponse
     {
+        $this->authorize('restore', Movie::class);
+
         $movie = $this->movieService->restoreMovie($id);
 
         return ApiResponse::fractal(

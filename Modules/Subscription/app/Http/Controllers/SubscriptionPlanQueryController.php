@@ -6,6 +6,7 @@ namespace Modules\Subscription\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Subscription\Contracts\SubscriptionPlanServiceInterface;
@@ -14,7 +15,8 @@ use Modules\Subscription\Models\SubscriptionPlan;
 
 class SubscriptionPlanQueryController extends Controller
 {
-    protected static string $modelClass = SubscriptionPlan::class;
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly SubscriptionPlanServiceInterface $service,
         private readonly SubscriptionPlanTransformer      $transformer,
@@ -22,6 +24,8 @@ class SubscriptionPlanQueryController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', SubscriptionPlan::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $plans   = $this->service->paginate($perPage);
 

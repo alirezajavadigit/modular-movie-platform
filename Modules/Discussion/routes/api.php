@@ -13,7 +13,7 @@ Route::middleware('api')->prefix('api/v1/discussions')->group(function () {
         ->whereNumber('discussion');
 });
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/discussions')->group(function () {
+Route::middleware(['api', 'auth:api'])->prefix('api/v1/discussions')->group(function () {
     Route::get('pending/list', [DiscussionQueryController::class, 'pending']);
 
     Route::get('{discussionableType}/{discussionableId}', [DiscussionQueryController::class, 'byDiscussionable'])
@@ -48,7 +48,7 @@ Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/discuss
         ->whereNumber('discussion');
 });
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/discussions')->group(function () {
+Route::middleware(['api', 'auth:api'])->prefix('api/v1/admin/discussions')->group(function () {
     Route::get('approved', [DiscussionQueryController::class, 'approved']);
     Route::get('rejected', [DiscussionQueryController::class, 'rejected']);
 

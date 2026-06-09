@@ -23,13 +23,17 @@ Route::middleware('api')->prefix('api/v1/credits')->group(function () {
     Route::get('{creditableType}/{creditableId}', [CreditQueryController::class, 'forCreditable']);
 });
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/persons')->group(function () {
+Route::middleware(['api', 'auth:api'])->prefix('api/v1/admin/persons')->group(function () {
     Route::post('{person}/image', [PersonController::class, 'uploadImage']);
     Route::delete('{person}/image', [PersonController::class, 'deleteImage']);
 
     Route::get('trashed', [PersonTrashedController::class, 'index']);
     Route::patch('{person}/restore', [PersonTrashedController::class, 'restore']);
     Route::delete('{person}/force-delete', [PersonTrashedController::class, 'forceDelete']);
+
+    Route::get('active', [PersonQueryController::class, 'active']);
+    Route::get('inactive', [PersonQueryController::class, 'inactive']);
+    Route::get('gender/{gender}', [PersonQueryController::class, 'byGender']);
 
     Route::get('/', [PersonController::class, 'index']);
     Route::post('/', [PersonController::class, 'store']);
@@ -38,7 +42,7 @@ Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/p
     Route::delete('{person}', [PersonController::class, 'destroy']);
 });
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])->prefix('api/v1/admin/credits')->group(function () {
+Route::middleware(['api', 'auth:api'])->prefix('api/v1/admin/credits')->group(function () {
     Route::get('/', [CreditController::class, 'index']);
     Route::post('/', [CreditController::class, 'store']);
     Route::get('{credit}', [CreditController::class, 'show']);

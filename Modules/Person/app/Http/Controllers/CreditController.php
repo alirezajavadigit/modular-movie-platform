@@ -6,9 +6,11 @@ namespace Modules\Person\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Person\Contracts\CreditServiceInterface;
+use Modules\Person\Models\Credit;
 use Modules\Person\DTOs\CreateCreditDTO;
 use Modules\Person\DTOs\UpdateCreditDTO;
 use Modules\Person\Http\Requests\StoreCreditRequest;
@@ -17,6 +19,8 @@ use Modules\Person\Http\Resources\Transformers\CreditTransformer;
 
 class CreditController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly CreditServiceInterface $service,
         private readonly CreditTransformer $transformer,
@@ -24,6 +28,8 @@ class CreditController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Credit::class);
+
         $personId = (int) $request->input('person_id', 0);
         $perPage  = (int) $request->input('per_page', 15);
 
@@ -36,6 +42,8 @@ class CreditController extends Controller
 
     public function store(StoreCreditRequest $request): JsonResponse
     {
+        $this->authorize('create', Credit::class);
+
         $data = $request->validated();
 
         $dto = new CreateCreditDTO(
@@ -57,12 +65,15 @@ class CreditController extends Controller
     public function show(int $id): JsonResponse
     {
         $credit = $this->service->findById($id);
+        $this->authorize('view', $credit);
 
         return ApiResponse::fractal($credit, $this->transformer, __('person::messages.credit_show'));
     }
 
     public function update(UpdateCreditRequest $request, int $id): JsonResponse
     {
+        $this->authorize('update', Credit::findOrFail($id));
+
         $data = $request->validated();
 
         $dto = new UpdateCreditDTO(
@@ -80,6 +91,8 @@ class CreditController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        $this->authorize('delete', Credit::findOrFail($id));
+
         $this->service->delete($id);
 
         return ApiResponse::noContent(__('person::messages.credit_deleted'));
