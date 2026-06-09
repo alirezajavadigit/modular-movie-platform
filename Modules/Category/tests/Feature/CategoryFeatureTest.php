@@ -221,10 +221,13 @@ class CategoryFeatureTest extends TestCase
 
     public function test_restore_returns_restored_category(): void
     {
-        $this->service->shouldReceive('restore')->once()->with(1)->andReturn($this->makeCategory());
+        $dbCategory = Category::factory()->create();
+        $dbCategory->delete();
+
+        $this->service->shouldReceive('restore')->once()->with($dbCategory->id)->andReturn($this->makeCategory());
 
         $this->asAdmin()
-            ->patchJson('/api/v1/admin/categories/1/restore')
+            ->patchJson("/api/v1/admin/categories/{$dbCategory->id}/restore")
             ->assertOk()
             ->assertJsonPath('success', true);
     }

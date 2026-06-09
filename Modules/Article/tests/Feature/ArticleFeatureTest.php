@@ -379,58 +379,66 @@ class ArticleFeatureTest extends TestCase
 
     public function test_publish_returns_published_article(): void
     {
-        $article = $this->makeArticle(['status' => 'published']);
+        $dbArticle = Article::factory()->create();
+        $article   = $this->makeArticle(['status' => 'published']);
 
-        $this->service->shouldReceive('publish')->once()->with(1)->andReturn($article);
+        $this->service->shouldReceive('publish')->once()->with($dbArticle->id)->andReturn($article);
 
         $this->asAdmin()
-            ->patchJson('/api/v1/admin/articles/1/publish')
+            ->patchJson("/api/v1/admin/articles/{$dbArticle->id}/publish")
             ->assertOk()
             ->assertJsonPath('success', true);
     }
 
     public function test_archive_returns_archived_article(): void
     {
-        $article = $this->makeArticle(['status' => 'archived']);
+        $dbArticle = Article::factory()->create();
+        $article   = $this->makeArticle(['status' => 'archived']);
 
-        $this->service->shouldReceive('archive')->once()->with(1)->andReturn($article);
+        $this->service->shouldReceive('archive')->once()->with($dbArticle->id)->andReturn($article);
 
         $this->asAdmin()
-            ->patchJson('/api/v1/admin/articles/1/archive')
+            ->patchJson("/api/v1/admin/articles/{$dbArticle->id}/archive")
             ->assertOk()
             ->assertJsonPath('success', true);
     }
 
     public function test_mark_as_draft_returns_draft_article(): void
     {
-        $article = $this->makeArticle(['status' => 'draft']);
+        $dbArticle = Article::factory()->create();
+        $article   = $this->makeArticle(['status' => 'draft']);
 
-        $this->service->shouldReceive('markAsDraft')->once()->with(1)->andReturn($article);
+        $this->service->shouldReceive('markAsDraft')->once()->with($dbArticle->id)->andReturn($article);
 
         $this->asAdmin()
-            ->patchJson('/api/v1/admin/articles/1/draft')
+            ->patchJson("/api/v1/admin/articles/{$dbArticle->id}/draft")
             ->assertOk()
             ->assertJsonPath('success', true);
     }
 
     public function test_restore_returns_restored_article(): void
     {
+        $dbArticle = Article::factory()->create();
+        $dbArticle->delete();
         $article = $this->makeArticle();
 
-        $this->service->shouldReceive('restore')->once()->with(1)->andReturn($article);
+        $this->service->shouldReceive('restore')->once()->with($dbArticle->id)->andReturn($article);
 
         $this->asAdmin()
-            ->patchJson('/api/v1/admin/articles/1/restore')
+            ->patchJson("/api/v1/admin/articles/{$dbArticle->id}/restore")
             ->assertOk()
             ->assertJsonPath('success', true);
     }
 
     public function test_force_delete_returns_204_with_no_data(): void
     {
-        $this->service->shouldReceive('forceDelete')->once()->with(1)->andReturn(true);
+        $dbArticle = Article::factory()->create();
+        $dbArticle->delete();
+
+        $this->service->shouldReceive('forceDelete')->once()->with($dbArticle->id)->andReturn(true);
 
         $this->asAdmin()
-            ->deleteJson('/api/v1/admin/articles/1/force-delete')
+            ->deleteJson("/api/v1/admin/articles/{$dbArticle->id}/force-delete")
             ->assertNoContent();
     }
 
