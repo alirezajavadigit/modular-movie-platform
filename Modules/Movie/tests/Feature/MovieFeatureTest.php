@@ -24,10 +24,10 @@ final class MovieFeatureTest extends TestCase
         parent::setUp();
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        Role::create(['name' => 'super-admin', 'guard_name' => 'api']);
+        Role::create(['name' => 'super_admin', 'guard_name' => 'api']);
 
         $this->admin = User::factory()->create();
-        $this->admin->assignRole('super-admin');
+        $this->admin->assignRole('super_admin');
     }
 
     public function test_public_get_all_movies_returns_200(): void

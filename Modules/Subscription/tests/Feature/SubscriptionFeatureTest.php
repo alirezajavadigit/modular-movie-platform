@@ -84,6 +84,9 @@ class SubscriptionFeatureTest extends TestCase
     {
         $user = User::factory()->create();
 
+        Permission::firstOrCreate(['name' => 'subscriptions.viewAny', 'guard_name' => 'api']);
+        $user->givePermissionTo('subscriptions.viewAny');
+
         $this->actingAs($user, 'api');
 
         $paginator = new LengthAwarePaginator([], 0, 15, 1, ['path' => 'http://localhost']);
@@ -97,6 +100,9 @@ class SubscriptionFeatureTest extends TestCase
     public function test_subscribe_returns_payment_url(): void
     {
         $user = User::factory()->create();
+
+        Permission::firstOrCreate(['name' => 'subscriptions.create', 'guard_name' => 'api']);
+        $user->givePermissionTo('subscriptions.create');
 
         $this->actingAs($user, 'api');
 

@@ -238,10 +238,13 @@ class PersonFeatureTest extends TestCase
     }
     public function test_restore_returns_restored(): void
     {
-        $this->service->shouldReceive('restore')->once()->with(1)->andReturn($this->makePerson());
+        $dbPerson = Person::factory()->create();
+        $dbPerson->delete();
+
+        $this->service->shouldReceive('restore')->once()->with($dbPerson->id)->andReturn($this->makePerson());
 
         $this->asAdmin()
-            ->patchJson('/api/v1/admin/persons/1/restore')
+            ->patchJson("/api/v1/admin/persons/{$dbPerson->id}/restore")
             ->assertOk()
             ->assertJsonPath('success', true);
     }
