@@ -45,7 +45,16 @@ final class CategoryRepository implements CategoryRepositoryInterface
     public function getActive(int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->where('is_active', true)
+            ->active()
+            ->orderBy('order')
+            ->latest()
+            ->paginate($perPage);
+    }
+
+    public function getInactive(int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->inactive()
             ->orderBy('order')
             ->latest()
             ->paginate($perPage);
@@ -69,10 +78,21 @@ final class CategoryRepository implements CategoryRepositoryInterface
             ->get();
     }
 
+    public function searchAll(string $query, int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->model->newQuery()
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                    ->orWhere('description', 'LIKE', "%{$query}%");
+            })
+            ->orderBy('order')
+            ->paginate($perPage);
+    }
+
     public function search(string $query, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->newQuery()
-            ->where('is_active', true)
+            ->active()
             ->where(function ($q) use ($query) {
                 $q->where('name', 'LIKE', "%{$query}%")
                     ->orWhere('description', 'LIKE', "%{$query}%");

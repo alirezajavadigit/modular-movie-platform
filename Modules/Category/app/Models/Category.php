@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Article\Models\Article;
 use Modules\Category\Database\Factories\CategoryFactory;
 use Spatie\Translatable\HasTranslations;
+use Illuminate\Database\Eloquent\Builder;
 
 class Category extends Model
 {
@@ -52,6 +53,17 @@ class Category extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeInactive(Builder $query): Builder
+    {
+        return $query->where('is_active', false);
     }
 
     public function articles(): MorphToMany

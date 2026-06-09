@@ -6,9 +6,11 @@ namespace Modules\Category\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Category\Contracts\CategoryServiceInterface;
+use Modules\Category\Models\Category;
 use Modules\Category\DTOs\CreateCategoryDTO;
 use Modules\Category\DTOs\UpdateCategoryDTO;
 use Modules\Category\Http\Requests\StoreCategoryRequest;
@@ -17,6 +19,8 @@ use Modules\Category\Http\Resources\Transformers\CategoryTransformer;
 
 class CategoryController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly CategoryServiceInterface $categoryService,
         private readonly CategoryTransformer $categoryTransformer,
@@ -24,8 +28,15 @@ class CategoryController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Category::class);
+
         $perPage = (int) $request->input('per_page', 15);
-        $categories = $this->categoryService->paginate($perPage);
+        $query   = (string) $request->input('q', '');
+
+        $categories = $query !== ''
+            ? $this->categoryService->searchAll($query, $perPage)
+            : $this->categoryService->paginate($perPage);
+
 
         return ApiResponse::paginated(
             $categories,
@@ -36,6 +47,8 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request): JsonResponse
     {
+        $this->authorize('create', Category::class);
+
         $validated = $request->validated();
 
         $dto = new CreateCategoryDTO(
@@ -59,6 +72,7 @@ class CategoryController extends Controller
     public function show(int $id): JsonResponse
     {
         $category = $this->categoryService->findById($id);
+        $this->authorize('view', $category);
 
         return ApiResponse::fractal(
             $category,
@@ -69,6 +83,8 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, int $id): JsonResponse
     {
+        $this->authorize('update', Category::findOrFail($id));
+
         $validated = $request->validated();
 
         $dto = new UpdateCategoryDTO(
@@ -91,6 +107,8 @@ class CategoryController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        $this->authorize('delete', Category::findOrFail($id));
+
         $this->categoryService->delete($id);
 
         return ApiResponse::noContent(__('category::messages.deleted'));

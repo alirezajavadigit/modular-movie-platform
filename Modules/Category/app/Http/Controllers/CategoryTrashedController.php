@@ -6,6 +6,7 @@ namespace Modules\Category\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Category\Contracts\CategoryServiceInterface;
@@ -14,7 +15,8 @@ use Modules\Category\Models\Category;
 
 class CategoryTrashedController extends Controller
 {
-    protected static string $modelClass = Category::class;
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly CategoryServiceInterface $categoryService,
         private readonly CategoryTransformer $categoryTransformer,
@@ -22,6 +24,8 @@ class CategoryTrashedController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewTrashed', Category::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $categories = $this->categoryService->getTrashed($perPage);
 
@@ -34,6 +38,8 @@ class CategoryTrashedController extends Controller
 
     public function restore(int $id): JsonResponse
     {
+        $this->authorize('restore', Category::withTrashed()->findOrFail($id));
+
         $category = $this->categoryService->restore($id);
 
         return ApiResponse::fractal(
@@ -45,6 +51,8 @@ class CategoryTrashedController extends Controller
 
     public function forceDelete(int $id): JsonResponse
     {
+        $this->authorize('forceDelete', Category::withTrashed()->findOrFail($id));
+
         $this->categoryService->forceDelete($id);
 
         return ApiResponse::noContent(__('category::messages.force_deleted'));

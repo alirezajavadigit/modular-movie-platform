@@ -6,13 +6,16 @@ namespace Modules\Category\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Category\Contracts\CategoryServiceInterface;
 use Modules\Category\Http\Resources\Transformers\CategoryTransformer;
+use Modules\Category\Models\Category;
 
 class CategoryQueryController extends Controller
 {
+    use AuthorizesRequests;
     public function __construct(
         private readonly CategoryServiceInterface $categoryService,
         private readonly CategoryTransformer $categoryTransformer,
@@ -27,6 +30,20 @@ class CategoryQueryController extends Controller
             $categories,
             $this->categoryTransformer,
             __('category::messages.active_list'),
+        );
+    }
+
+    public function inactive(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Category::class);
+
+        $perPage = (int) $request->input('per_page', 15);
+        $categories = $this->categoryService->getInactive($perPage);
+
+        return ApiResponse::paginated(
+            $categories,
+            $this->categoryTransformer,
+            __('category::messages.inactive_list'),
         );
     }
 
