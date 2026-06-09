@@ -6,6 +6,7 @@ namespace Modules\Article\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Article\Contracts\ArticleServiceInterface;
@@ -14,7 +15,8 @@ use Modules\Article\Models\Article;
 
 class ArticleQueryController extends Controller
 {
-    protected static string $modelClass = Article::class;
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly ArticleServiceInterface $articleService,
         private readonly ArticleTransformer $articleTransformer,
@@ -48,6 +50,8 @@ class ArticleQueryController extends Controller
 
     public function drafts(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Article::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $articles = $this->articleService->getDrafts($perPage);
 
@@ -60,6 +64,8 @@ class ArticleQueryController extends Controller
 
     public function archived(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Article::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $articles = $this->articleService->getArchived($perPage);
 
@@ -72,6 +78,8 @@ class ArticleQueryController extends Controller
 
     public function byStatus(Request $request, string $status): JsonResponse
     {
+        $this->authorize('viewAny', Article::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $articles = $this->articleService->getByStatus($status, $perPage);
 

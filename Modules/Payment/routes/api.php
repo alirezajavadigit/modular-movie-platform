@@ -10,7 +10,7 @@ use Modules\Payment\Http\Controllers\PaymentStatusController;
 use Modules\Payment\Http\Controllers\PaymentTrashedController;
 
 
-Route::middleware(['api', 'auth:api', 'auto.authorize'])
+Route::middleware(['api', 'auth:api'])
     ->prefix('api/v1/admin/payments')
     ->group(function () {
         Route::get('trashed', [PaymentTrashedController::class, 'index']);

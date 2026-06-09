@@ -6,15 +6,19 @@ namespace Modules\Payment\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Modules\Payment\Contracts\PaymentServiceInterface;
 use Modules\Payment\DTOs\UpdatePaymentDTO;
 use Modules\Payment\Enums\PaymentStatus;
 use Modules\Payment\Http\Requests\UpdatePaymentRequest;
 use Modules\Payment\Http\Resources\Transformers\PaymentTransformer;
+use Modules\Payment\Models\Payment;
 
 class PaymentStatusController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly PaymentServiceInterface $service,
         private readonly PaymentTransformer $transformer,
@@ -22,6 +26,8 @@ class PaymentStatusController extends Controller
 
     public function verify(UpdatePaymentRequest $request, int $id): JsonResponse
     {
+        $this->authorize('verify', Payment::findOrFail($id));
+
         $validated = $request->validated();
 
         $dto = new UpdatePaymentDTO(

@@ -6,6 +6,7 @@ namespace Modules\Article\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Article\Contracts\ArticleServiceInterface;
@@ -14,7 +15,8 @@ use Modules\Article\Models\Article;
 
 class ArticleTrashedController extends Controller
 {
-    protected static string $modelClass = Article::class;
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly ArticleServiceInterface $articleService,
         private readonly ArticleTransformer $articleTransformer,
@@ -22,6 +24,8 @@ class ArticleTrashedController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewTrashed', Article::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $articles = $this->articleService->getTrashed($perPage);
 
@@ -34,6 +38,8 @@ class ArticleTrashedController extends Controller
 
     public function restore(int $id): JsonResponse
     {
+        $this->authorize('restore', Article::withTrashed()->findOrFail($id));
+
         $article = $this->articleService->restore($id);
 
         return ApiResponse::fractal(
@@ -45,6 +51,8 @@ class ArticleTrashedController extends Controller
 
     public function forceDelete(int $id): JsonResponse
     {
+        $this->authorize('forceDelete', Article::withTrashed()->findOrFail($id));
+
         $this->articleService->forceDelete($id);
 
         return ApiResponse::noContent(__('article::messages.force_deleted'));

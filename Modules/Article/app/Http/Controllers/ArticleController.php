@@ -6,10 +6,12 @@ namespace Modules\Article\Http\Controllers;
 
 use App\Facades\ApiResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Article\Contracts\ArticleRepositoryInterface;
 use Modules\Article\Contracts\ArticleServiceInterface;
+use Modules\Article\Models\Article;
 use Modules\Article\DTOs\CreateArticleDTO;
 use Modules\Article\DTOs\UpdateArticleDTO;
 use Modules\Article\Http\Requests\StoreArticleRequest;
@@ -18,6 +20,8 @@ use Modules\Article\Http\Resources\Transformers\ArticleTransformer;
 
 class ArticleController extends Controller
 {
+    use AuthorizesRequests;
+
     public function __construct(
         private readonly ArticleServiceInterface $articleService,
         private readonly ArticleRepositoryInterface $articleRepository,
@@ -26,6 +30,8 @@ class ArticleController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Article::class);
+
         $perPage = (int) $request->input('per_page', 15);
         $articles = $this->articleService->paginate($perPage);
 
@@ -38,6 +44,8 @@ class ArticleController extends Controller
 
     public function store(StoreArticleRequest $request): JsonResponse
     {
+        $this->authorize('create', Article::class);
+
         $validated = $request->validated();
 
         $dto = new CreateArticleDTO(
@@ -73,6 +81,7 @@ class ArticleController extends Controller
     public function show(int $id): JsonResponse
     {
         $article = $this->articleService->findById($id);
+        $this->authorize('view', $article);
 
         return ApiResponse::fractal(
             $article,
@@ -83,6 +92,8 @@ class ArticleController extends Controller
 
     public function update(UpdateArticleRequest $request, int $id): JsonResponse
     {
+        $this->authorize('update', Article::findOrFail($id));
+
         $validated = $request->validated();
 
         $dto = new UpdateArticleDTO(
@@ -116,6 +127,8 @@ class ArticleController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        $this->authorize('delete', Article::findOrFail($id));
+
         $this->articleService->delete($id);
 
         return ApiResponse::noContent(__('article::messages.deleted'));
