@@ -15,22 +15,22 @@ class UserRepository implements UserRepositoryInterface
 
     public function findByEmail(string $email): ?User
     {
-        return $this->model->where('email', $email)->first();
+        return $this->model->newQuery()->where('email', $email)->first();
     }
 
     public function findById(int $id): ?User
     {
-        return $this->model->find($id);
+        return $this->model->newQuery()->find($id);
     }
 
     public function findByPhone(string $phone): ?User
     {
-        return $this->model->where('phone', $phone)->first();
+        return $this->model->newQuery()->where('phone', $phone)->first();
     }
 
     public function findByEmailOrPhone(string $identifier): ?User
     {
-        return $this->model
+        return $this->model->newQuery()
             ->where('email', $identifier)
             ->orWhere('phone', $identifier)
             ->first();
@@ -38,7 +38,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function create(RegisterDTO $dto): User
     {
-        return $this->model->create([
+        return $this->model->newQuery()->create([
             'name' => $dto->name,
             'email' => $dto->email,
             'phone' => $dto->phone,
@@ -58,7 +58,7 @@ class UserRepository implements UserRepositoryInterface
         $user = $this->findByEmail($dto->email);
 
         if (! $user) {
-            $user = $this->model->create([
+            $user = $this->model->newQuery()->create([
                 'name' => $dto->name ?? '',
                 'email' => $dto->email,
                 'email_verified_at' => now(),
