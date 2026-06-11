@@ -22,6 +22,7 @@ use Modules\Authorization\Http\Requests\RevokeRoleRequest;
 use Modules\Authorization\Http\Requests\SyncRoleRequest;
 use Modules\Authorization\Http\Resources\Transformers\PermissionTransformer;
 use Modules\Authorization\Http\Resources\Transformers\RoleTransformer;
+use OpenApi\Attributes as OA;
 
 class UserAuthorizationController extends Controller
 {
@@ -31,6 +32,23 @@ class UserAuthorizationController extends Controller
         private readonly PermissionAssignmentServiceInterface $permissionAssignmentService,
     ) {}
 
+    #[OA\Post(
+        path: '/api/v1/users/{userId}/roles/assign',
+        operationId: 'api.users.roles.assign',
+        summary: 'Assign roles to a user',
+        security: [['bearerAuth' => []]],
+        tags: ['Authorization'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/RoleNamesRequest'),
+        parameters: [
+            new OA\Parameter(name: 'userId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/RoleCollection')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/LegacyValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function assignRoles(AssignRoleRequest $request, int $userId): JsonResponse
     {
         $this->authorize('assignToUser', Role::class);
@@ -49,6 +67,23 @@ class UserAuthorizationController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/users/{userId}/roles/revoke',
+        operationId: 'api.users.roles.revoke',
+        summary: 'Revoke roles from a user',
+        security: [['bearerAuth' => []]],
+        tags: ['Authorization'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/RoleNamesRequest'),
+        parameters: [
+            new OA\Parameter(name: 'userId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/RoleCollection')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/LegacyValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function revokeRoles(RevokeRoleRequest $request, int $userId): JsonResponse
     {
         $this->authorize('revokeFromUser', Role::class);
@@ -67,6 +102,23 @@ class UserAuthorizationController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/users/{userId}/roles/sync',
+        operationId: 'api.users.roles.sync',
+        summary: 'Replace the role set of a user',
+        security: [['bearerAuth' => []]],
+        tags: ['Authorization'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/SyncRolesRequest'),
+        parameters: [
+            new OA\Parameter(name: 'userId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/RoleCollection')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function syncRoles(SyncRoleRequest $request, int $userId): JsonResponse
     {
         $this->authorize('assignToUser', Role::class);
@@ -84,6 +136,23 @@ class UserAuthorizationController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/users/{userId}/permissions/assign',
+        operationId: 'api.users.permissions.assign',
+        summary: 'Grant direct permissions to a user',
+        security: [['bearerAuth' => []]],
+        tags: ['Authorization'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/PermissionNamesRequest'),
+        parameters: [
+            new OA\Parameter(name: 'userId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PermissionCollection')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function assignPermissions(AssignPermissionRequest $request, int $userId): JsonResponse
     {
         $this->authorize('assignToUser', Permission::class);
@@ -102,6 +171,23 @@ class UserAuthorizationController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/users/{userId}/permissions/revoke',
+        operationId: 'api.users.permissions.revoke',
+        summary: 'Revoke direct permissions from a user',
+        security: [['bearerAuth' => []]],
+        tags: ['Authorization'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/PermissionNamesRequest'),
+        parameters: [
+            new OA\Parameter(name: 'userId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PermissionCollection')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function revokePermissions(RevokePermissionRequest $request, int $userId): JsonResponse
     {
         $this->authorize('revokeFromUser', Permission::class);
@@ -120,6 +206,21 @@ class UserAuthorizationController extends Controller
         );
     }
 
+    #[OA\Get(
+        path: '/api/v1/users/{userId}/roles',
+        operationId: 'api.users.roles.index',
+        summary: 'List the roles of a user',
+        security: [['bearerAuth' => []]],
+        tags: ['Authorization'],
+        parameters: [
+            new OA\Parameter(name: 'userId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/RoleCollection')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function getUserRoles(int $userId): JsonResponse
     {
         $this->authorize('viewAny', Role::class);
@@ -133,6 +234,21 @@ class UserAuthorizationController extends Controller
         );
     }
 
+    #[OA\Get(
+        path: '/api/v1/users/{userId}/permissions',
+        operationId: 'api.users.permissions.index',
+        summary: 'List the direct permissions of a user',
+        security: [['bearerAuth' => []]],
+        tags: ['Authorization'],
+        parameters: [
+            new OA\Parameter(name: 'userId', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PermissionCollection')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function getUserPermissions(int $userId): JsonResponse
     {
         $this->authorize('viewAny', Permission::class);
