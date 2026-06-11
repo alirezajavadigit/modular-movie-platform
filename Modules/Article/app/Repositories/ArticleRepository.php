@@ -215,4 +215,34 @@ final class ArticleRepository implements ArticleRepositoryInterface
         $article = $this->model->newQuery()->findOrFail($id);
         $article->tags()->sync($tagIds);
     }
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery();
+
+        if (!empty($filters['q'])) {
+            $q = $filters['q'];
+            $query->where(fn($s) => $s->where('title', 'LIKE', "%{$q}%")->orWhere('summary', 'LIKE', "%{$q}%"));
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['author_id'])) {
+            $query->where('user_id', (int) $filters['author_id']);
+        }
+
+        if (isset($filters['is_featured']) && $filters['is_featured'] !== '') {
+            $query->where('is_featured', (bool) $filters['is_featured']);
+        }
+
+        match ($filters['trashed'] ?? 'without') {
+            'with'  => $query->withTrashed(),
+            'only'  => $query->onlyTrashed(),
+            default => null,
+        };
+
+        return $query->latest()->paginate($perPage);
+    }
 }

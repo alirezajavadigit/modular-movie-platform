@@ -17,6 +17,7 @@ use Modules\Article\DTOs\UpdateArticleDTO;
 use Modules\Article\Http\Requests\StoreArticleRequest;
 use Modules\Article\Http\Requests\UpdateArticleRequest;
 use Modules\Article\Http\Resources\Transformers\ArticleTransformer;
+use OpenApi\Attributes as OA;
 
 class ArticleController extends Controller
 {
@@ -28,12 +29,34 @@ class ArticleController extends Controller
         private readonly ArticleTransformer $articleTransformer,
     ) {}
 
+    #[OA\Get(
+        path: '/api/v1/admin/articles',
+        operationId: 'article.admin.index',
+        summary: 'List all articles with advanced filtering',
+        security: [['bearerAuth' => []]],
+        tags: ['Article'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/SearchQuery'),
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['draft', 'published', 'archived'])),
+            new OA\Parameter(name: 'author_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'is_featured', in: 'query', required: false, schema: new OA\Schema(type: 'integer', enum: [0, 1])),
+            new OA\Parameter(name: 'trashed', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['without', 'with', 'only'], default: 'without')),
+            new OA\Parameter(ref: '#/components/parameters/Page'),
+            new OA\Parameter(ref: '#/components/parameters/PerPage'),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/ArticlePage')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Article::class);
 
+        $filters = $request->only(['q', 'status', 'author_id', 'is_featured', 'trashed']);
         $perPage = (int) $request->input('per_page', 15);
-        $articles = $this->articleService->paginate($perPage);
+
+        $articles = $this->articleService->adminFilter($filters, $perPage);
 
         return ApiResponse::paginated(
             $articles,
@@ -42,6 +65,19 @@ class ArticleController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/admin/articles',
+        operationId: 'article.admin.store',
+        summary: 'Create an article',
+        security: [['bearerAuth' => []]],
+        tags: ['Article'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/StoreArticleRequest'),
+    )]
+    #[OA\Response(response: 201, ref: '#/components/responses/ArticleCreated')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function store(StoreArticleRequest $request): JsonResponse
     {
         $this->authorize('create', Article::class);
@@ -78,6 +114,21 @@ class ArticleController extends Controller
         );
     }
 
+    #[OA\Get(
+        path: '/api/v1/admin/articles/{article}',
+        operationId: 'article.admin.show',
+        summary: 'Show an article',
+        security: [['bearerAuth' => []]],
+        tags: ['Article'],
+        parameters: [
+            new OA\Parameter(name: 'article', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/ArticleItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function show(int $id): JsonResponse
     {
         $article = $this->articleService->findById($id);
@@ -90,6 +141,23 @@ class ArticleController extends Controller
         );
     }
 
+    #[OA\Put(
+        path: '/api/v1/admin/articles/{article}',
+        operationId: 'article.admin.update',
+        summary: 'Update an article',
+        security: [['bearerAuth' => []]],
+        tags: ['Article'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UpdateArticleRequest'),
+        parameters: [
+            new OA\Parameter(name: 'article', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/ArticleItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function update(UpdateArticleRequest $request, int $id): JsonResponse
     {
         $this->authorize('update', Article::findOrFail($id));
@@ -125,6 +193,21 @@ class ArticleController extends Controller
         );
     }
 
+    #[OA\Delete(
+        path: '/api/v1/admin/articles/{article}',
+        operationId: 'article.admin.destroy',
+        summary: 'Soft delete an article',
+        security: [['bearerAuth' => []]],
+        tags: ['Article'],
+        parameters: [
+            new OA\Parameter(name: 'article', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 204, ref: '#/components/responses/NoContent')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function destroy(int $id): JsonResponse
     {
         $this->authorize('delete', Article::findOrFail($id));
