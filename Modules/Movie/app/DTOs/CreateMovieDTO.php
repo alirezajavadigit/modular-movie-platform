@@ -8,8 +8,8 @@ use Modules\Movie\Enums\MovieType;
 readonly class CreateMovieDTO
 {
     public function __construct(
-        public string $title,
-        public ?string $description,
+        public array $title,
+        public ?array $description,
         public ?string $poster,
         public ?string $trailerUrl,
         public ?array $downloadLinks,

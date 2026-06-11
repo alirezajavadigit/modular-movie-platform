@@ -16,6 +16,7 @@ use Modules\Movie\Enums\MovieType;
 use Modules\Movie\Http\Requests\StoreMovieRequest;
 use Modules\Movie\Http\Requests\UpdateMovieRequest;
 use Modules\Movie\Http\Resources\Transformers\MovieTransformer;
+use OpenApi\Attributes as OA;
 
 class MovieController extends Controller
 {
@@ -37,6 +38,19 @@ class MovieController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/movies',
+        operationId: 'api.movies.store',
+        summary: 'Create a movie or serial',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/StoreMovieRequest'),
+    )]
+    #[OA\Response(response: 201, ref: '#/components/responses/MovieCreated')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 422, ref: '#/components/responses/LegacyValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function store(StoreMovieRequest $request): JsonResponse
     {
         $this->authorize('create', Movie::class);
@@ -77,6 +91,44 @@ class MovieController extends Controller
         );
     }
 
+    #[OA\Put(
+        path: '/api/v1/movies/{movie}',
+        operationId: 'api.movies.update',
+        summary: 'Update a movie or serial',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UpdateMovieRequest'),
+        parameters: [
+            new OA\Parameter(name: 'movie', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, ref: '#/components/responses/MovieItem'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/LegacyValidationError'),
+            new OA\Response(response: 500, ref: '#/components/responses/ServerError'),
+        ],
+    )]
+    #[OA\Patch(
+        path: '/api/v1/movies/{movie}',
+        operationId: 'api.movies.patch',
+        summary: 'Partially update a movie or serial',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UpdateMovieRequest'),
+        parameters: [
+            new OA\Parameter(name: 'movie', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, ref: '#/components/responses/MovieItem'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/LegacyValidationError'),
+            new OA\Response(response: 500, ref: '#/components/responses/ServerError'),
+        ],
+    )]
     public function update(UpdateMovieRequest $request, int $id): JsonResponse
     {
         $movie = $this->movieService->getMovieById($id);
@@ -109,6 +161,21 @@ class MovieController extends Controller
         );
     }
 
+    #[OA\Delete(
+        path: '/api/v1/movies/{movie}',
+        operationId: 'api.movies.destroy',
+        summary: 'Soft delete a movie or serial',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        parameters: [
+            new OA\Parameter(name: 'movie', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 204, ref: '#/components/responses/NoContent')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function destroy(int $id): JsonResponse
     {
         $this->authorize('delete', Movie::findOrFail($id));
@@ -120,6 +187,21 @@ class MovieController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/movies/{movie}/restore',
+        operationId: 'api.movies.restore',
+        summary: 'Restore a soft-deleted movie or serial',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        parameters: [
+            new OA\Parameter(name: 'movie', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/MovieItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function restore(int $id): JsonResponse
     {
         $this->authorize('restore', Movie::class);

@@ -14,6 +14,7 @@ use Modules\Movie\DTOs\UpdateEpisodeDTO;
 use Modules\Movie\Http\Requests\StoreEpisodeRequest;
 use Modules\Movie\Http\Requests\UpdateEpisodeRequest;
 use Modules\Movie\Http\Resources\Transformers\EpisodeTransformer;
+use OpenApi\Attributes as OA;
 
 class EpisodeController extends Controller
 {
@@ -35,6 +36,23 @@ class EpisodeController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/movies/{movie}/episodes',
+        operationId: 'api.movies.episodes.store',
+        summary: 'Create an episode for a serial',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/StoreEpisodeRequest'),
+        parameters: [
+            new OA\Parameter(name: 'movie', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 201, ref: '#/components/responses/EpisodeCreated')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/LegacyValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function store(StoreEpisodeRequest $request, int $movie): JsonResponse
     {
         $this->authorize('create', Episode::class);
@@ -72,6 +90,46 @@ class EpisodeController extends Controller
         );
     }
 
+    #[OA\Put(
+        path: '/api/v1/movies/{movie}/episodes/{episode}',
+        operationId: 'api.movies.episodes.update',
+        summary: 'Update an episode',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UpdateEpisodeRequest'),
+        parameters: [
+            new OA\Parameter(name: 'movie', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'episode', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, ref: '#/components/responses/EpisodeItem'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/LegacyValidationError'),
+            new OA\Response(response: 500, ref: '#/components/responses/ServerError'),
+        ],
+    )]
+    #[OA\Patch(
+        path: '/api/v1/movies/{movie}/episodes/{episode}',
+        operationId: 'api.movies.episodes.patch',
+        summary: 'Partially update an episode',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UpdateEpisodeRequest'),
+        parameters: [
+            new OA\Parameter(name: 'movie', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'episode', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        responses: [
+            new OA\Response(response: 200, ref: '#/components/responses/EpisodeItem'),
+            new OA\Response(response: 401, ref: '#/components/responses/Unauthorized'),
+            new OA\Response(response: 403, ref: '#/components/responses/Forbidden'),
+            new OA\Response(response: 404, ref: '#/components/responses/NotFound'),
+            new OA\Response(response: 422, ref: '#/components/responses/LegacyValidationError'),
+            new OA\Response(response: 500, ref: '#/components/responses/ServerError'),
+        ],
+    )]
     public function update(UpdateEpisodeRequest $request, int $movie, int $episodeId): JsonResponse
     {
         $episode = $this->episodeService->getEpisodeById($movie, $episodeId);
@@ -102,6 +160,22 @@ class EpisodeController extends Controller
         );
     }
 
+    #[OA\Delete(
+        path: '/api/v1/movies/{movie}/episodes/{episode}',
+        operationId: 'api.movies.episodes.destroy',
+        summary: 'Soft delete an episode',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        parameters: [
+            new OA\Parameter(name: 'movie', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'episode', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 204, ref: '#/components/responses/NoContent')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function destroy(int $movie, int $episode): JsonResponse
     {
         $this->authorize('delete', Episode::findOrFail($episode));
@@ -113,6 +187,22 @@ class EpisodeController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/movies/{movie}/episodes/{episode}/restore',
+        operationId: 'api.movies.episodes.restore',
+        summary: 'Restore a soft-deleted episode',
+        security: [['bearerAuth' => []]],
+        tags: ['Movie'],
+        parameters: [
+            new OA\Parameter(name: 'movie', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'episode', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/EpisodeItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function restore(int $movie, int $episode): JsonResponse
     {
         $this->authorize('restore', Episode::class);

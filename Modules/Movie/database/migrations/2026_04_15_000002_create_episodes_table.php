@@ -15,8 +15,8 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->unsignedTinyInteger('season_number');
             $table->unsignedSmallInteger('episode_number');
-            $table->string('title');
-            $table->text('description')->nullable();
+            $table->json('title');
+            $table->json('description')->nullable();
             $table->string('poster')->nullable();
             $table->string('trailer_url')->nullable();
             $table->json('download_links')->nullable();

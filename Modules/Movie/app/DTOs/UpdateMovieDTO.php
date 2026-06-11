@@ -7,8 +7,8 @@ use Modules\Movie\Enums\BadgeType;
 readonly class UpdateMovieDTO
 {
     public function __construct(
-        public string $title,
-        public ?string $description,
+        public array $title,
+        public ?array $description,
         public ?string $poster,
         public ?string $trailerUrl,
         public ?array $downloadLinks,
