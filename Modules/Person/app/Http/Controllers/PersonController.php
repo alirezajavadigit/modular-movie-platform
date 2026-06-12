@@ -17,6 +17,7 @@ use Modules\Person\Http\Requests\StorePersonRequest;
 use Modules\Person\Http\Requests\UpdatePersonRequest;
 use Modules\Person\Http\Requests\UploadPersonImageRequest;
 use Modules\Person\Http\Resources\Transformers\PersonTransformer;
+use OpenApi\Attributes as OA;
 
 class PersonController extends Controller
 {
@@ -27,13 +28,34 @@ class PersonController extends Controller
         private readonly PersonTransformer $transformer,
     ) {}
 
+    #[OA\Get(
+        path: '/api/v1/admin/persons',
+        operationId: 'person.admin.index',
+        summary: 'List all persons with advanced filtering',
+        security: [['bearerAuth' => []]],
+        tags: ['Person'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/SearchQuery'),
+            new OA\Parameter(name: 'gender', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['male', 'female', 'other'])),
+            new OA\Parameter(name: 'department', in: 'query', required: false, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'is_active', in: 'query', required: false, schema: new OA\Schema(type: 'integer', enum: [0, 1])),
+            new OA\Parameter(name: 'trashed', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['without', 'with', 'only'], default: 'without')),
+            new OA\Parameter(ref: '#/components/parameters/Page'),
+            new OA\Parameter(ref: '#/components/parameters/PerPage'),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PersonPage')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Person::class);
 
+        $filters = $request->only(['q', 'gender', 'department', 'is_active', 'trashed']);
         $perPage = (int) $request->input('per_page', 15);
-        $query = $request->input('q', '');
-        $persons = $query ? $this->service->searchAll($query, $perPage) : $this->service->paginate($perPage);
+
+        $persons = $this->service->adminFilter($filters, $perPage);
 
         return ApiResponse::paginated(
             $persons,
@@ -42,6 +64,19 @@ class PersonController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/admin/persons',
+        operationId: 'person.admin.store',
+        summary: 'Create a person',
+        security: [['bearerAuth' => []]],
+        tags: ['Person'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/StorePersonRequest'),
+    )]
+    #[OA\Response(response: 201, ref: '#/components/responses/PersonCreated')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function store(StorePersonRequest $request): JsonResponse
     {
         $this->authorize('create', Person::class);
@@ -71,6 +106,21 @@ class PersonController extends Controller
         );
     }
 
+    #[OA\Get(
+        path: '/api/v1/admin/persons/{person}',
+        operationId: 'person.admin.show',
+        summary: 'Show a person',
+        security: [['bearerAuth' => []]],
+        tags: ['Person'],
+        parameters: [
+            new OA\Parameter(name: 'person', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PersonItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function show(int $id): JsonResponse
     {
         $person = $this->service->findById($id);
@@ -83,6 +133,23 @@ class PersonController extends Controller
         );
     }
 
+    #[OA\Put(
+        path: '/api/v1/admin/persons/{person}',
+        operationId: 'person.admin.update',
+        summary: 'Update a person',
+        security: [['bearerAuth' => []]],
+        tags: ['Person'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UpdatePersonRequest'),
+        parameters: [
+            new OA\Parameter(name: 'person', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PersonItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function update(UpdatePersonRequest $request, int $id): JsonResponse
     {
         $this->authorize('update', Person::findOrFail($id));
@@ -112,6 +179,21 @@ class PersonController extends Controller
         );
     }
 
+    #[OA\Delete(
+        path: '/api/v1/admin/persons/{person}',
+        operationId: 'person.admin.destroy',
+        summary: 'Soft delete a person',
+        security: [['bearerAuth' => []]],
+        tags: ['Person'],
+        parameters: [
+            new OA\Parameter(name: 'person', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 204, ref: '#/components/responses/NoContent')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function destroy(int $id): JsonResponse
     {
         $this->authorize('delete', Person::findOrFail($id));
@@ -121,6 +203,23 @@ class PersonController extends Controller
         return ApiResponse::noContent(__('person::messages.deleted'));
     }
 
+    #[OA\Post(
+        path: '/api/v1/admin/persons/{person}/image',
+        operationId: 'person.admin.uploadImage',
+        summary: 'Upload or replace the avatar of a person',
+        security: [['bearerAuth' => []]],
+        tags: ['Person'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UploadPersonImageRequest'),
+        parameters: [
+            new OA\Parameter(name: 'person', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PersonItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function uploadImage(UploadPersonImageRequest $request, int $id): JsonResponse
     {
         $person = Person::findOrFail($id);
@@ -135,6 +234,21 @@ class PersonController extends Controller
         );
     }
 
+    #[OA\Delete(
+        path: '/api/v1/admin/persons/{person}/image',
+        operationId: 'person.admin.deleteImage',
+        summary: 'Remove the avatar of a person',
+        security: [['bearerAuth' => []]],
+        tags: ['Person'],
+        parameters: [
+            new OA\Parameter(name: 'person', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PersonItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function deleteImage(int $id): JsonResponse
     {
         $person = Person::findOrFail($id);
