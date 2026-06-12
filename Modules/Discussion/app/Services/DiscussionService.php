@@ -158,6 +158,11 @@ final class DiscussionService implements DiscussionServiceInterface
         return $this->discussionsCount($discussionableType, $discussionableId) > 0;
     }
 
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->repository->adminFilter($filters, $this->guardPerPage($perPage));
+    }
+
     private function guardPerPage(int $perPage): int
     {
         if ($perPage < 1 || $perPage > 100) {
