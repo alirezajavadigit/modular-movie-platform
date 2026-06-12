@@ -43,4 +43,6 @@ interface CategoryServiceInterface
     public function activate(int $id): Category;
 
     public function deactivate(int $id): Category;
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator;
 }
