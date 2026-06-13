@@ -97,4 +97,21 @@ final class SubscriptionPlanRepository implements SubscriptionPlanRepositoryInte
     {
         return $this->model->newQuery()->where('id', $id)->exists();
     }
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery();
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        match ($filters['trashed'] ?? 'without') {
+            'with'  => $query->withTrashed(),
+            'only'  => $query->onlyTrashed(),
+            default => null,
+        };
+
+        return $query->latest()->paginate($perPage);
+    }
 }
