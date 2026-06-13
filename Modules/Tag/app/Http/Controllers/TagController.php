@@ -16,6 +16,7 @@ use Modules\Tag\DTOs\UpdateTagDTO;
 use Modules\Tag\Http\Requests\StoreTagRequest;
 use Modules\Tag\Http\Requests\UpdateTagRequest;
 use Modules\Tag\Http\Resources\Transformers\TagTransformer;
+use OpenApi\Attributes as OA;
 
 class TagController extends Controller
 {
@@ -26,13 +27,32 @@ class TagController extends Controller
         private readonly TagTransformer $tagTransformer,
     ) {}
 
+    #[OA\Get(
+        path: '/api/v1/admin/tags',
+        operationId: 'tag.admin.index',
+        summary: 'List all tags with advanced filtering',
+        security: [['bearerAuth' => []]],
+        tags: ['Tag'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/SearchQuery'),
+            new OA\Parameter(name: 'is_active', in: 'query', required: false, schema: new OA\Schema(type: 'integer', enum: [0, 1])),
+            new OA\Parameter(name: 'trashed', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['without', 'with', 'only'], default: 'without')),
+            new OA\Parameter(ref: '#/components/parameters/Page'),
+            new OA\Parameter(ref: '#/components/parameters/PerPage'),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/TagPage')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Tag::class);
 
+        $filters = $request->only(['q', 'is_active', 'trashed']);
         $perPage = (int) $request->input('per_page', 15);
-        $query =  $request->input('q', '');
-        $tags = $query ? $this->tagService->searchAll($query, $perPage) : $this->tagService->paginate($perPage);
+
+        $tags = $this->tagService->adminFilter($filters, $perPage);
 
         return ApiResponse::paginated(
             $tags,
@@ -41,6 +61,19 @@ class TagController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/admin/tags',
+        operationId: 'tag.admin.store',
+        summary: 'Create a tag',
+        security: [['bearerAuth' => []]],
+        tags: ['Tag'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/StoreTagRequest'),
+    )]
+    #[OA\Response(response: 201, ref: '#/components/responses/TagCreated')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function store(StoreTagRequest $request): JsonResponse
     {
         $this->authorize('create', Tag::class);
@@ -64,6 +97,21 @@ class TagController extends Controller
         );
     }
 
+    #[OA\Get(
+        path: '/api/v1/admin/tags/{tag}',
+        operationId: 'tag.admin.show',
+        summary: 'Show a tag',
+        security: [['bearerAuth' => []]],
+        tags: ['Tag'],
+        parameters: [
+            new OA\Parameter(name: 'tag', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/TagItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function show(int $id): JsonResponse
     {
         $tag = $this->tagService->findById($id);
@@ -76,6 +124,23 @@ class TagController extends Controller
         );
     }
 
+    #[OA\Put(
+        path: '/api/v1/admin/tags/{tag}',
+        operationId: 'tag.admin.update',
+        summary: 'Update a tag',
+        security: [['bearerAuth' => []]],
+        tags: ['Tag'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UpdateTagRequest'),
+        parameters: [
+            new OA\Parameter(name: 'tag', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/TagItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function update(UpdateTagRequest $request, int $id): JsonResponse
     {
         $this->authorize('update', Tag::findOrFail($id));
@@ -99,6 +164,21 @@ class TagController extends Controller
         );
     }
 
+    #[OA\Delete(
+        path: '/api/v1/admin/tags/{tag}',
+        operationId: 'tag.admin.destroy',
+        summary: 'Soft delete a tag',
+        security: [['bearerAuth' => []]],
+        tags: ['Tag'],
+        parameters: [
+            new OA\Parameter(name: 'tag', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 204, ref: '#/components/responses/NoContent')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function destroy(int $id): JsonResponse
     {
         $this->authorize('delete', Tag::findOrFail($id));

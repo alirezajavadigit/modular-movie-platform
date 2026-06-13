@@ -160,4 +160,26 @@ final class TagRepository implements TagRepositoryInterface
 
         return $tag->refresh();
     }
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery();
+
+        if (!empty($filters['q'])) {
+            $q = $filters['q'];
+            $query->where(fn($s) => $s->where('name', 'LIKE', "%{$q}%")->orWhere('description', 'LIKE', "%{$q}%"));
+        }
+
+        if (isset($filters['is_active']) && $filters['is_active'] !== '') {
+            $query->where('is_active', (bool) $filters['is_active']);
+        }
+
+        match ($filters['trashed'] ?? 'without') {
+            'with'  => $query->withTrashed(),
+            'only'  => $query->onlyTrashed(),
+            default => null,
+        };
+
+        return $query->latest()->paginate($perPage);
+    }
 }
