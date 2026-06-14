@@ -14,6 +14,7 @@ use Modules\Favorite\DTOs\CreateFavoriteDTO;
 use Modules\Favorite\Http\Requests\StoreFavoriteRequest;
 use Modules\Favorite\Http\Resources\Transformers\FavoriteTransformer;
 use Modules\Favorite\Models\Favorite;
+use OpenApi\Attributes as OA;
 
 class FavoriteController extends Controller
 {
@@ -24,6 +25,21 @@ class FavoriteController extends Controller
         private readonly FavoriteTransformer      $transformer,
     ) {}
 
+    #[OA\Get(
+        path: '/api/v1/favorites',
+        operationId: 'api.v1.favorites.index',
+        summary: 'List the favorites of the authenticated user',
+        security: [['bearerAuth' => []]],
+        tags: ['Favorite'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/Page'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 15)),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/FavoritePage')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Favorite::class);
@@ -38,6 +54,20 @@ class FavoriteController extends Controller
         );
     }
 
+    #[OA\Post(
+        path: '/api/v1/favorites',
+        operationId: 'api.v1.favorites.store',
+        summary: 'Favorite a resource',
+        security: [['bearerAuth' => []]],
+        tags: ['Favorite'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/StoreFavoriteRequest'),
+    )]
+    #[OA\Response(response: 201, ref: '#/components/responses/FavoriteCreated')]
+    #[OA\Response(response: 200, ref: '#/components/responses/FavoriteItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function store(StoreFavoriteRequest $request): JsonResponse
     {
         $this->authorize('create', Favorite::class);
@@ -71,6 +101,21 @@ class FavoriteController extends Controller
         );
     }
 
+    #[OA\Delete(
+        path: '/api/v1/favorites/{favorite}',
+        operationId: 'api.v1.favorites.destroy',
+        summary: 'Remove a favorite',
+        security: [['bearerAuth' => []]],
+        tags: ['Favorite'],
+        parameters: [
+            new OA\Parameter(name: 'favorite', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 204, ref: '#/components/responses/NoContent')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function destroy(Favorite $favorite): JsonResponse
     {
         $this->authorize('delete', $favorite);
@@ -80,6 +125,19 @@ class FavoriteController extends Controller
         return ApiResponse::noContent(__('favorite::messages.deleted'));
     }
 
+    #[OA\Post(
+        path: '/api/v1/favorites/toggle',
+        operationId: 'api.v1.favorites.toggle',
+        summary: 'Toggle a favorite on or off',
+        security: [['bearerAuth' => []]],
+        tags: ['Favorite'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/StoreFavoriteRequest'),
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/FavoriteToggle')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function toggle(StoreFavoriteRequest $request): JsonResponse
     {
         $this->authorize('create', Favorite::class);

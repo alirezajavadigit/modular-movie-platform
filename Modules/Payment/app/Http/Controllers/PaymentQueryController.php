@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Modules\Payment\Contracts\PaymentServiceInterface;
 use Modules\Payment\Http\Resources\Transformers\PaymentTransformer;
 use Modules\Payment\Models\Payment;
+use OpenApi\Attributes as OA;
 
 class PaymentQueryController extends Controller
 {
@@ -21,6 +22,17 @@ class PaymentQueryController extends Controller
         private readonly PaymentTransformer $transformer,
     ) {}
 
+    #[OA\Get(
+        path: '/api/v1/payments',
+        operationId: 'payment.index',
+        summary: 'List the payments of the authenticated user',
+        security: [['bearerAuth' => []]],
+        tags: ['Payment'],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PaymentCollection')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function index(): JsonResponse
     {
         $this->authorize('viewAny', Payment::class);
@@ -30,6 +42,21 @@ class PaymentQueryController extends Controller
         return ApiResponse::fractal($payments, $this->transformer, __('payment::messages.index'));
     }
 
+    #[OA\Get(
+        path: '/api/v1/payments/{payment}',
+        operationId: 'payment.show',
+        summary: 'Show a payment of the authenticated user',
+        security: [['bearerAuth' => []]],
+        tags: ['Payment'],
+        parameters: [
+            new OA\Parameter(name: 'payment', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/PaymentItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function show(int $id): JsonResponse
     {
         $payment = $this->service->findById($id);
