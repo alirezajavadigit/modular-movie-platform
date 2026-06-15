@@ -16,23 +16,23 @@ class RoleRepository implements RoleRepositoryInterface
 
     public function getAll(): Collection
     {
-        return $this->model->all();
+        return $this->model->newQuery()->get();
     }
     public function findById(int $id): ?Role
     {
-        return $this->model->find($id);
+        return $this->model->newQuery()->find($id);
     }
     public function findByName(string $name): ?Role
     {
-        return $this->model->where("name", $name)->first();
+        return $this->model->newQuery()->where("name", $name)->first();
     }
     public function findByNames(array $names): Collection
     {
-        return $this->model->whereIn("name", $names)->get();
+        return $this->model->newQuery()->whereIn("name", $names)->get();
     }
     public function create(CreateRoleDTO $dto): Role
     {
-        $role = $this->model->create([
+        $role = $this->model->newQuery()->create([
             "name" => $dto->name,
             "guard_name" => $dto->guardName,
         ]);
@@ -45,7 +45,7 @@ class RoleRepository implements RoleRepositoryInterface
     }
     public function update(int $id, UpdateRoleDTO $dto): Role
     {
-        $role = $this->model->findOrFail($id);
+        $role = $this->model->newQuery()->findOrFail($id);
         $role->update(["name" => $dto->name]);
 
         if (!empty($dto->permissions)) {
@@ -56,12 +56,12 @@ class RoleRepository implements RoleRepositoryInterface
     }
     public function hasUsersAssigned(int $id): bool
     {
-        $role = $this->model->findOrFail($id);
+        $role = $this->model->newQuery()->findOrFail($id);
         return $role->users()->exists();
     }
     public function delete(int $id): bool
     {
-        $role = $this->model->findOrFail($id);
+        $role = $this->model->newQuery()->findOrFail($id);
         return $role->delete();
     }
     public function syncPermissions(int $roleId, array $permissionNames): Role

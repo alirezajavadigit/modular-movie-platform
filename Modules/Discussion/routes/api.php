@@ -49,6 +49,7 @@ Route::middleware(['api', 'auth:api'])->prefix('api/v1/discussions')->group(func
 });
 
 Route::middleware(['api', 'auth:api'])->prefix('api/v1/admin/discussions')->group(function () {
+    Route::get('/', [DiscussionQueryController::class, 'adminIndex']);
     Route::get('approved', [DiscussionQueryController::class, 'approved']);
     Route::get('rejected', [DiscussionQueryController::class, 'rejected']);
 

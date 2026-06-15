@@ -20,4 +20,6 @@ interface SubscriptionServiceInterface
     public function forceDelete(Subscription $subscription): bool;
     public function restore(Subscription $subscription): Subscription;
     public function getTrashed(int $perPage = 15): LengthAwarePaginator;
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator;
 }

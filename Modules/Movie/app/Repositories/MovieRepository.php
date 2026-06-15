@@ -3,6 +3,7 @@
 namespace Modules\Movie\Repositories;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Movie\Contracts\MovieRepositoryInterface;
 use Modules\Movie\DTOs\CreateMovieDTO;
 use Modules\Movie\DTOs\UpdateMovieDTO;
@@ -16,17 +17,17 @@ class MovieRepository implements MovieRepositoryInterface
 
     public function getAll(): Collection
     {
-        return $this->model->all();
+        return $this->model->newQuery()->get();
     }
 
     public function findById(int $id): ?Movie
     {
-        return $this->model->find($id);
+        return $this->model->newQuery()->find($id);
     }
 
     public function create(CreateMovieDTO $dto): Movie
     {
-        return $this->model->create([
+        return $this->model->newQuery()->create([
             'title'          => $dto->title,
             'description'    => $dto->description,
             'poster'         => $dto->poster,
@@ -43,7 +44,7 @@ class MovieRepository implements MovieRepositoryInterface
 
     public function update(int $id, UpdateMovieDTO $dto): Movie
     {
-        $movie = $this->model->findOrFail($id);
+        $movie = $this->model->newQuery()->findOrFail($id);
 
         $movie->update([
             'title'          => $dto->title,
@@ -63,7 +64,7 @@ class MovieRepository implements MovieRepositoryInterface
 
     public function delete(int $id): bool
     {
-        $movie = $this->model->findOrFail($id);
+        $movie = $this->model->newQuery()->findOrFail($id);
 
         return $movie->delete();
     }
@@ -81,5 +82,70 @@ class MovieRepository implements MovieRepositoryInterface
         $movie = $this->model->withTrashed()->findOrFail($id);
 
         return $movie->forceDelete();
+    }
+
+    public function findByIdWithTrashed(int $id): ?Movie
+    {
+        return $this->model->withTrashed()->find($id);
+    }
+
+    public function adminFilter(array $filters, int $perPage): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery();
+
+        if (!empty($filters['q'])) {
+            $query->where('title', 'LIKE', "%{$filters['q']}%");
+        }
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+        if (!empty($filters['badge'])) {
+            $query->where('badge', $filters['badge']);
+        }
+        if (!empty($filters['year_from'])) {
+            $query->where('release_year', '>=', (int) $filters['year_from']);
+        }
+        if (!empty($filters['year_to'])) {
+            $query->where('release_year', '<=', (int) $filters['year_to']);
+        }
+        if (!empty($filters['country'])) {
+            $query->where('country', 'LIKE', "%{$filters['country']}%");
+        }
+        if (!empty($filters['language'])) {
+            $query->where('language', 'LIKE', "%{$filters['language']}%");
+        }
+        if (isset($filters['imdb_min']) && $filters['imdb_min'] !== '') {
+            $query->where('imdb_score', '>=', (float) $filters['imdb_min']);
+        }
+        if (isset($filters['imdb_max']) && $filters['imdb_max'] !== '') {
+            $query->where('imdb_score', '<=', (float) $filters['imdb_max']);
+        }
+
+        match ($filters['trashed'] ?? 'without') {
+            'with'  => $query->withTrashed(),
+            'only'  => $query->onlyTrashed(),
+            default => null,
+        };
+
+        return $query->latest()->paginate($perPage);
+    }
+
+    public function publicPaginated(string $q, string $type, int $perPage): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery();
+
+        if ($q !== '') {
+            $query->where('title', 'LIKE', "%{$q}%");
+        }
+        if ($type !== '') {
+            $query->where('type', $type);
+        }
+
+        return $query->latest()->paginate($perPage);
+    }
+
+    public function getTrashed(int $perPage): LengthAwarePaginator
+    {
+        return $this->model->onlyTrashed()->latest()->paginate($perPage);
     }
 }

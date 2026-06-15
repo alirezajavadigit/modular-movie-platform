@@ -22,4 +22,6 @@ interface SubscriptionRepositoryInterface
     public function restore(Subscription $subscription): Subscription;
     public function getTrashed(int $perPage = 15): LengthAwarePaginator;
     public function exists(int $id): bool;
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator;
 }

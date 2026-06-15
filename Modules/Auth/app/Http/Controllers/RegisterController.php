@@ -8,9 +8,21 @@ use Modules\Auth\Contracts\AuthServiceInterface;
 use Modules\Auth\DTOs\RegisterDTO;
 use Modules\Auth\Http\Requests\RegisterRequest;
 use Modules\Auth\Http\Resources\Transformers\UserTransformer;
+use OpenApi\Attributes as OA;
 
 class RegisterController extends Controller
 {
+    #[OA\Post(
+        path: '/api/v1/auth/register',
+        operationId: 'auth.register',
+        summary: 'Register a new account',
+        tags: ['Auth'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/RegisterRequest'),
+    )]
+    #[OA\Response(response: 201, ref: '#/components/responses/AuthSessionCreated')]
+    #[OA\Response(response: 422, ref: '#/components/responses/LegacyValidationError')]
+    #[OA\Response(response: 429, ref: '#/components/responses/TooManyRequests')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function __invoke(RegisterRequest $request, AuthServiceInterface $auth): JsonResponse
     {
         $dto = new RegisterDTO(

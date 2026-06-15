@@ -18,8 +18,10 @@ class StoreEpisodeRequest extends FormRequest
         return [
             'season_number'   => ['required', 'integer', 'min:1'],
             'episode_number'  => ['required', 'integer', 'min:1'],
-            'title'           => ['required', 'string', 'max:255'],
-            'description'     => ['nullable', 'string'],
+            'title'            => ['required', 'array'],
+            'title.*'          => ['required', 'string', 'min:1', 'max:255'],
+            'description'      => ['nullable', 'array'],
+            'description.*'    => ['nullable', 'string'],
             'poster'          => ['nullable', 'string', 'max:2048'],
             'poster_file'     => ['nullable', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
             'trailer_url'     => ['nullable', 'string', 'url', 'max:2048'],

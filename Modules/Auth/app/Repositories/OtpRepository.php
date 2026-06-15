@@ -15,7 +15,7 @@ class OtpRepository implements OtpRepositoryInterface
 
     public function create(OtpDTO $dto, Carbon $expiresAt): Otp
     {
-        return $this->model->create([
+        return $this->model->newQuery()->create([
             'user_id' => $dto->userId,
             'code' => $dto->code,
             'channel' => $dto->channel,
@@ -25,7 +25,7 @@ class OtpRepository implements OtpRepositoryInterface
 
     public function findValid(int $userId, string $code): ?Otp
     {
-        return $this->model
+        return $this->model->newQuery()
             ->where('user_id', $userId)
             ->where('code', $code)
             ->where('expires_at', '>', now())
@@ -40,7 +40,7 @@ class OtpRepository implements OtpRepositoryInterface
 
     public function deleteExpired(): void
     {
-        $this->model
+        $this->model->newQuery()
             ->where('expires_at', '<=', now())
             ->delete();
     }

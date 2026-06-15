@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Modules\Article\Contracts\ArticleServiceInterface;
 use Modules\Article\Http\Resources\Transformers\ArticleTransformer;
 use Modules\Article\Models\Article;
+use OpenApi\Attributes as OA;
 
 class ArticleTrashedController extends Controller
 {
@@ -22,6 +23,21 @@ class ArticleTrashedController extends Controller
         private readonly ArticleTransformer $articleTransformer,
     ) {}
 
+    #[OA\Get(
+        path: '/api/v1/admin/articles/trashed',
+        operationId: 'article.admin.trashed',
+        summary: 'List soft-deleted articles',
+        security: [['bearerAuth' => []]],
+        tags: ['Article'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/Page'),
+            new OA\Parameter(ref: '#/components/parameters/PerPage'),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/ArticlePage')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewTrashed', Article::class);
@@ -36,6 +52,21 @@ class ArticleTrashedController extends Controller
         );
     }
 
+    #[OA\Patch(
+        path: '/api/v1/admin/articles/{article}/restore',
+        operationId: 'article.admin.restore',
+        summary: 'Restore a soft-deleted article',
+        security: [['bearerAuth' => []]],
+        tags: ['Article'],
+        parameters: [
+            new OA\Parameter(name: 'article', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/ArticleItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function restore(int $id): JsonResponse
     {
         $this->authorize('restore', Article::withTrashed()->findOrFail($id));
@@ -49,6 +80,21 @@ class ArticleTrashedController extends Controller
         );
     }
 
+    #[OA\Delete(
+        path: '/api/v1/admin/articles/{article}/force-delete',
+        operationId: 'article.admin.forceDelete',
+        summary: 'Permanently delete an article',
+        security: [['bearerAuth' => []]],
+        tags: ['Article'],
+        parameters: [
+            new OA\Parameter(name: 'article', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 204, ref: '#/components/responses/NoContent')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function forceDelete(int $id): JsonResponse
     {
         $this->authorize('forceDelete', Article::withTrashed()->findOrFail($id));

@@ -11,10 +11,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Favorite\Traits\HasFavorite;
 use Modules\Movie\Database\Factories\EpisodeFactory;
 use Modules\Person\Concerns\HasCredits;
+use Spatie\Translatable\HasTranslations;
 
 class Episode extends Model
 {
-    use HasFactory, SoftDeletes, HasCredits, HasFavorite;
+    use HasFactory, SoftDeletes, HasCredits, HasFavorite, HasTranslations;
+
+    public array $translatable = ['title', 'description'];
 
     protected $fillable = [
         'movie_id',

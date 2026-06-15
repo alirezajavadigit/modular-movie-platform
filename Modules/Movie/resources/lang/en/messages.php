@@ -9,8 +9,11 @@ return [
         'store'    => 'Movie created successfully.',
         'update'   => 'Movie updated successfully.',
         'destroy'  => 'Movie deleted successfully.',
-        'restore'  => 'Movie restored successfully.',
-        'not_found' => 'Movie not found.',
+        'restore'       => 'Movie restored successfully.',
+        'not_found'     => 'Movie not found.',
+        'trashed'       => 'Trashed movies retrieved successfully.',
+        'force_deleted' => 'Movie permanently deleted.',
+        'search'        => 'Search results retrieved successfully.',
     ],
 
     'episodes' => [

@@ -51,4 +51,6 @@ interface PersonRepositoryInterface
     public function activate(int $id): Person;
 
     public function deactivate(int $id): Person;
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator;
 }

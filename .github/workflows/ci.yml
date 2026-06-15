@@ -42,6 +42,18 @@ jobs:
       - name: Run PHPUnit tests
         run: php artisan test
 
+      - name: Validate OpenAPI documentation
+        run: |
+          php artisan docs:generate --fresh
+          test -s storage/api-docs/api-docs.json
+          php -r '
+            $spec = json_decode(file_get_contents("storage/api-docs/api-docs.json"), true);
+            if (!is_array($spec) || empty($spec["openapi"]) || empty($spec["paths"])) {
+              fwrite(STDERR, "OpenAPI spec is invalid or empty\n");
+              exit(1);
+            }
+          '
+
   merge-and-tag:
     name: Merge → main & Tag v1
     runs-on: ubuntu-latest

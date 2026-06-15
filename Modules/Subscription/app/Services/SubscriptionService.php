@@ -152,4 +152,13 @@ final class SubscriptionService implements SubscriptionServiceInterface
 
         return $this->repository->getTrashed($perPage);
     }
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        if ($perPage < 1 || $perPage > 100) {
+            throw new InvalidArgumentException('Per page must be between 1 and 100.');
+        }
+
+        return $this->repository->adminFilter($filters, $perPage);
+    }
 }

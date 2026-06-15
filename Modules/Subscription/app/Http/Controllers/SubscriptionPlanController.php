@@ -15,6 +15,7 @@ use Modules\Subscription\Http\Requests\StoreSubscriptionPlanRequest;
 use Modules\Subscription\Http\Requests\UpdateSubscriptionPlanRequest;
 use Modules\Subscription\Http\Resources\Transformers\SubscriptionPlanTransformer;
 use Modules\Subscription\Models\SubscriptionPlan;
+use OpenApi\Attributes as OA;
 
 class SubscriptionPlanController extends Controller
 {
@@ -25,6 +26,19 @@ class SubscriptionPlanController extends Controller
         private readonly SubscriptionPlanTransformer      $transformer,
     ) {}
 
+    #[OA\Post(
+        path: '/api/v1/admin/subscription-plans',
+        operationId: 'subscriptionPlan.admin.store',
+        summary: 'Create a subscription plan',
+        security: [['bearerAuth' => []]],
+        tags: ['Subscription'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/StoreSubscriptionPlanRequest'),
+    )]
+    #[OA\Response(response: 201, ref: '#/components/responses/SubscriptionPlanCreated')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function store(StoreSubscriptionPlanRequest $request): JsonResponse
     {
         $this->authorize('create', SubscriptionPlan::class);
@@ -43,6 +57,23 @@ class SubscriptionPlanController extends Controller
         return ApiResponse::fractalCreated($plan, $this->transformer, __('subscription::messages.plan_created'));
     }
 
+    #[OA\Put(
+        path: '/api/v1/admin/subscription-plans/{subscriptionPlan}',
+        operationId: 'subscriptionPlan.admin.update',
+        summary: 'Update a subscription plan',
+        security: [['bearerAuth' => []]],
+        tags: ['Subscription'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UpdateSubscriptionPlanRequest'),
+        parameters: [
+            new OA\Parameter(name: 'subscriptionPlan', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/SubscriptionPlanItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function update(UpdateSubscriptionPlanRequest $request, SubscriptionPlan $subscriptionPlan): JsonResponse
     {
         $this->authorize('update', $subscriptionPlan);
@@ -61,6 +92,21 @@ class SubscriptionPlanController extends Controller
         return ApiResponse::fractal($plan, $this->transformer, __('subscription::messages.plan_updated'));
     }
 
+    #[OA\Delete(
+        path: '/api/v1/admin/subscription-plans/{subscriptionPlan}',
+        operationId: 'subscriptionPlan.admin.destroy',
+        summary: 'Soft delete a subscription plan',
+        security: [['bearerAuth' => []]],
+        tags: ['Subscription'],
+        parameters: [
+            new OA\Parameter(name: 'subscriptionPlan', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 204, ref: '#/components/responses/NoContent')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function destroy(SubscriptionPlan $subscriptionPlan): JsonResponse
     {
         $this->authorize('delete', $subscriptionPlan);

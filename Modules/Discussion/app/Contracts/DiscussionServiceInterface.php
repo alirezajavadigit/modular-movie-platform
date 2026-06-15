@@ -47,4 +47,6 @@ interface DiscussionServiceInterface
     public function approvedDiscussionsCount(string $discussionableType, int $discussionableId): int;
 
     public function hasDiscussions(string $discussionableType, int $discussionableId): bool;
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator;
 }

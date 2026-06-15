@@ -126,4 +126,29 @@ final class DiscussionRepository implements DiscussionRepositoryInterface
             ->approved()
             ->count();
     }
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = $this->model->newQuery()->with(['user', 'discussionable']);
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['user_id'])) {
+            $query->where('user_id', (int) $filters['user_id']);
+        }
+
+        if (!empty($filters['discussionable_type'])) {
+            $query->where('discussionable_type', $filters['discussionable_type']);
+        }
+
+        match ($filters['trashed'] ?? 'without') {
+            'with'  => $query->withTrashed(),
+            'only'  => $query->onlyTrashed(),
+            default => null,
+        };
+
+        return $query->latest()->paginate($perPage);
+    }
 }

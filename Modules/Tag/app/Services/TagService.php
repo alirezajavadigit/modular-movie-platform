@@ -222,6 +222,12 @@ final class TagService implements TagServiceInterface
         return $this->repository->deactivate($id);
     }
 
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $this->guardPerPage($perPage);
+        return $this->repository->adminFilter($filters, $perPage);
+    }
+
     private function guardPerPage(int $perPage): void
     {
         if ($perPage < 1 || $perPage > 100) {

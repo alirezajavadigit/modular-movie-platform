@@ -16,7 +16,7 @@ class EpisodeRepository implements EpisodeRepositoryInterface
 
     public function getAllByMovie(int $movieId): Collection
     {
-        return $this->model
+        return $this->model->newQuery()
             ->where('movie_id', $movieId)
             ->orderBy('season_number')
             ->orderBy('episode_number')
@@ -25,12 +25,12 @@ class EpisodeRepository implements EpisodeRepositoryInterface
 
     public function findById(int $id): ?Episode
     {
-        return $this->model->find($id);
+        return $this->model->newQuery()->find($id);
     }
 
     public function create(CreateEpisodeDTO $dto): Episode
     {
-        return $this->model->create([
+        return $this->model->newQuery()->create([
             'movie_id'       => $dto->movieId,
             'season_number'  => $dto->seasonNumber,
             'episode_number' => $dto->episodeNumber,
@@ -44,7 +44,7 @@ class EpisodeRepository implements EpisodeRepositoryInterface
 
     public function update(int $id, UpdateEpisodeDTO $dto): Episode
     {
-        $episode = $this->model->findOrFail($id);
+        $episode = $this->model->newQuery()->findOrFail($id);
 
         $episode->update([
             'season_number'  => $dto->seasonNumber,
@@ -61,7 +61,7 @@ class EpisodeRepository implements EpisodeRepositoryInterface
 
     public function delete(int $id): bool
     {
-        $episode = $this->model->findOrFail($id);
+        $episode = $this->model->newQuery()->findOrFail($id);
 
         return $episode->delete();
     }

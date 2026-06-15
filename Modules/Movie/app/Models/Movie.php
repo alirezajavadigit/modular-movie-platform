@@ -14,10 +14,13 @@ use Modules\Movie\Database\Factories\MovieFactory;
 use Modules\Movie\Enums\BadgeType;
 use Modules\Movie\Enums\MovieType;
 use Modules\Person\Concerns\HasCredits;
+use Spatie\Translatable\HasTranslations;
 
 class Movie extends Model
 {
-    use HasFactory, SoftDeletes, HasCredits, HasFavorite, HasLike;
+    use HasFactory, SoftDeletes, HasCredits, HasFavorite, HasLike, HasTranslations;
+
+    public array $translatable = ['title', 'description'];
 
     protected $fillable = [
         'title',

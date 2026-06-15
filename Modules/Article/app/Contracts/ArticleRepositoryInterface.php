@@ -53,4 +53,6 @@ interface ArticleRepositoryInterface
     public function archive(int $id): Article;
 
     public function markAsDraft(int $id): Article;
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator;
 }

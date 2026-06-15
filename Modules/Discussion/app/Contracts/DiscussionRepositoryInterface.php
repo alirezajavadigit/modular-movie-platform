@@ -37,4 +37,6 @@ interface DiscussionRepositoryInterface
     public function countByDiscussionable(string $discussionableType, int $discussionableId): int;
 
     public function countApprovedByDiscussionable(string $discussionableType, int $discussionableId): int;
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator;
 }

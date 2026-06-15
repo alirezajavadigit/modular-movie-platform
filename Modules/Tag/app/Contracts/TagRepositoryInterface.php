@@ -47,4 +47,6 @@ interface TagRepositoryInterface
     public function activate(int $id): Tag;
 
     public function deactivate(int $id): Tag;
+
+    public function adminFilter(array $filters, int $perPage = 15): LengthAwarePaginator;
 }

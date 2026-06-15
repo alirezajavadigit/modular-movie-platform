@@ -16,6 +16,7 @@ use Modules\User\DTOs\UpdateUserDTO;
 use Modules\User\Http\Requests\StoreUserRequest;
 use Modules\User\Http\Requests\UpdateUserRequest;
 use Modules\User\Http\Resources\Transformers\UserTransformer;
+use OpenApi\Attributes as OA;
 
 class UserController extends Controller
 {
@@ -26,6 +27,21 @@ class UserController extends Controller
         private readonly UserTransformer $transformer,
     ) {}
 
+    #[OA\Get(
+        path: '/api/v1/admin/users',
+        operationId: 'user.admin.index',
+        summary: 'List all users',
+        security: [['bearerAuth' => []]],
+        tags: ['User'],
+        parameters: [
+            new OA\Parameter(ref: '#/components/parameters/Page'),
+            new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', minimum: 1, maximum: 100, default: 15)),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/UserPage')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', User::class);
@@ -35,6 +51,19 @@ class UserController extends Controller
         return ApiResponse::paginated($users, $this->transformer, __('user::messages.index'));
     }
 
+    #[OA\Post(
+        path: '/api/v1/admin/users',
+        operationId: 'user.admin.store',
+        summary: 'Create a user',
+        security: [['bearerAuth' => []]],
+        tags: ['User'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/StoreUserRequest'),
+    )]
+    #[OA\Response(response: 201, ref: '#/components/responses/UserCreated')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function store(StoreUserRequest $request): JsonResponse
     {
         $this->authorize('create', User::class);
@@ -52,6 +81,21 @@ class UserController extends Controller
         return ApiResponse::fractalCreated($user, $this->transformer, __('user::messages.created'));
     }
 
+    #[OA\Get(
+        path: '/api/v1/admin/users/{user}',
+        operationId: 'user.admin.show',
+        summary: 'Show a user',
+        security: [['bearerAuth' => []]],
+        tags: ['User'],
+        parameters: [
+            new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/UserItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function show(User $user): JsonResponse
     {
         $this->authorize('view', $user);
@@ -63,6 +107,23 @@ class UserController extends Controller
         );
     }
 
+    #[OA\Put(
+        path: '/api/v1/admin/users/{user}',
+        operationId: 'user.admin.update',
+        summary: 'Update a user',
+        security: [['bearerAuth' => []]],
+        tags: ['User'],
+        requestBody: new OA\RequestBody(ref: '#/components/requestBodies/UpdateUserRequest'),
+        parameters: [
+            new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 200, ref: '#/components/responses/UserItem')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 422, ref: '#/components/responses/ValidationError')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
         $this->authorize('update', $user);
@@ -80,6 +141,21 @@ class UserController extends Controller
         return ApiResponse::fractal($updated, $this->transformer, __('user::messages.updated'));
     }
 
+    #[OA\Delete(
+        path: '/api/v1/admin/users/{user}',
+        operationId: 'user.admin.destroy',
+        summary: 'Soft delete a user',
+        security: [['bearerAuth' => []]],
+        tags: ['User'],
+        parameters: [
+            new OA\Parameter(name: 'user', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+    )]
+    #[OA\Response(response: 204, ref: '#/components/responses/NoContent')]
+    #[OA\Response(response: 401, ref: '#/components/responses/Unauthorized')]
+    #[OA\Response(response: 403, ref: '#/components/responses/Forbidden')]
+    #[OA\Response(response: 404, ref: '#/components/responses/NotFound')]
+    #[OA\Response(response: 500, ref: '#/components/responses/ServerError')]
     public function destroy(User $user): JsonResponse
     {
         $this->authorize('delete', $user);

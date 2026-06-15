@@ -14,27 +14,27 @@ class PermissionRepository implements PermissionRepositoryInterface
 
     public function getAll(): Collection
     {
-        return $this->model->all();
+        return $this->model->newQuery()->get();
     }
 
     public function findById(int $id): ?Permission
     {
-        return $this->model->find($id);
+        return $this->model->newQuery()->find($id);
     }
 
     public function findByName(string $name): ?Permission
     {
-        return $this->model->where('name', $name)->first();
+        return $this->model->newQuery()->where('name', $name)->first();
     }
 
     public function findByNames(array $names): Collection
     {
-        return $this->model->whereIn('name', $names)->get();
+        return $this->model->newQuery()->whereIn('name', $names)->get();
     }
 
     public function findByModule(string $modulePrefix): Collection
     {
-        return $this->model
+        return $this->model->newQuery()
             ->where('name', 'like', $modulePrefix . '.%')
             ->get();
     }
