@@ -166,7 +166,7 @@ class PersonFeatureTest extends TestCase
 
     public function test_index_returns_paginated(): void
     {
-        $this->service->shouldReceive('paginate')->once()->with(15)->andReturn($this->makePaginator([$this->makePerson()]));
+        $this->service->shouldReceive('adminFilter')->once()->andReturn($this->makePaginator([$this->makePerson()]));
 
         $this->asAdmin()
             ->getJson('/api/v1/admin/persons')

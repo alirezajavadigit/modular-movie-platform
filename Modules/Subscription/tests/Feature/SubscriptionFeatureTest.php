@@ -73,7 +73,7 @@ class SubscriptionFeatureTest extends TestCase
     {
         $paginator = new LengthAwarePaginator([], 0, 15, 1, ['path' => 'http://localhost']);
 
-        $this->service->shouldReceive('paginate')->once()->andReturn($paginator);
+        $this->service->shouldReceive('adminFilter')->once()->andReturn($paginator);
 
         $this->asAdmin()
             ->getJson('api/v1/admin/subscriptions')

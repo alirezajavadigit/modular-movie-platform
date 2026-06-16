@@ -136,7 +136,7 @@ class TagFeatureTest extends TestCase
 
     public function test_index_returns_paginated_tags(): void
     {
-        $this->service->shouldReceive('paginate')->once()->with(15)->andReturn($this->makePaginator());
+        $this->service->shouldReceive('adminFilter')->once()->andReturn($this->makePaginator());
 
         $this->asAdmin()
             ->getJson('/api/v1/admin/tags')
