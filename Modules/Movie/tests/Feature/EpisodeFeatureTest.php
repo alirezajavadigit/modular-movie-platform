@@ -90,8 +90,8 @@ final class EpisodeFeatureTest extends TestCase
         $payload = [
             'season_number'  => 1,
             'episode_number' => 1,
-            'title'          => 'Pilot',
-            'description'    => 'The first episode',
+            'title'          => ['en' => 'Pilot'],
+            'description'    => ['en' => 'The first episode'],
             'download_links' => ['https://example.com/ep1'],
         ];
 
@@ -102,8 +102,8 @@ final class EpisodeFeatureTest extends TestCase
             ->assertJsonFragment(['title' => 'Pilot']);
 
         $this->assertDatabaseHas('episodes', [
-            'movie_id' => $this->serial->id,
-            'title'    => 'Pilot',
+            'movie_id'  => $this->serial->id,
+            'title->en' => 'Pilot',
         ]);
     }
 
@@ -114,7 +114,7 @@ final class EpisodeFeatureTest extends TestCase
         $payload = [
             'season_number'  => 1,
             'episode_number' => 1,
-            'title'          => 'Upload Test',
+            'title'          => ['en' => 'Upload Test'],
             'poster_file'    => UploadedFile::fake()->image('ep-poster.jpg', 400, 300),
         ];
 
@@ -123,7 +123,7 @@ final class EpisodeFeatureTest extends TestCase
 
         $response->assertCreated();
 
-        $episode = Episode::where('title', 'Upload Test')->first();
+        $episode = Episode::where('title->en', 'Upload Test')->first();
         $this->assertNotNull($episode->poster);
     }
 
@@ -203,7 +203,7 @@ final class EpisodeFeatureTest extends TestCase
         $payload = [
             'season_number'  => $episode->season_number,
             'episode_number' => $episode->episode_number,
-            'title'          => 'Updated Title',
+            'title'          => ['en' => 'Updated Title'],
         ];
 
         $response = $this->actingAs($this->admin, 'api')
@@ -212,7 +212,7 @@ final class EpisodeFeatureTest extends TestCase
         $response->assertOk()
             ->assertJsonFragment(['title' => 'Updated Title']);
 
-        $this->assertDatabaseHas('episodes', ['id' => $episode->id, 'title' => 'Updated Title']);
+        $this->assertDatabaseHas('episodes', ['id' => $episode->id, 'title->en' => 'Updated Title']);
     }
 
     public function test_update_episode_returns_404_when_not_found(): void
@@ -220,7 +220,7 @@ final class EpisodeFeatureTest extends TestCase
         $payload = [
             'season_number'  => 1,
             'episode_number' => 1,
-            'title'          => 'Updated',
+            'title'          => ['en' => 'Updated'],
         ];
 
         $response = $this->actingAs($this->admin, 'api')

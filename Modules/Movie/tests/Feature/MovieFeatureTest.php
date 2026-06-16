@@ -76,8 +76,8 @@ final class MovieFeatureTest extends TestCase
     public function test_create_movie_returns_201(): void
     {
         $payload = [
-            'title'        => 'Inception',
-            'description'  => 'A mind-bending thriller',
+            'title'        => ['en' => 'Inception'],
+            'description'  => ['en' => 'A mind-bending thriller'],
             'poster'       => 'https://example.com/poster.jpg',
             'trailer_url'  => 'https://example.com/trailer.mp4',
             'download_links' => ['https://example.com/dl1'],
@@ -95,14 +95,14 @@ final class MovieFeatureTest extends TestCase
         $response->assertCreated()
             ->assertJsonFragment(['title' => 'Inception']);
 
-        $this->assertDatabaseHas('movies', ['title' => 'Inception']);
+        $this->assertDatabaseHas('movies', ['title->en' => 'Inception']);
     }
 
     public function test_create_serial_returns_201(): void
     {
         $payload = [
-            'title'        => 'Breaking Bad',
-            'description'  => 'A chemistry teacher turned drug lord',
+            'title'        => ['en' => 'Breaking Bad'],
+            'description'  => ['en' => 'A chemistry teacher turned drug lord'],
             'release_year' => 2008,
             'badge'        => BadgeType::Subtitled->value,
             'type'         => MovieType::Serial->value,
@@ -120,7 +120,7 @@ final class MovieFeatureTest extends TestCase
         Storage::fake(config('movie.upload.disk', 'public'));
 
         $payload = [
-            'title'        => 'Upload Test',
+            'title'        => ['en' => 'Upload Test'],
             'release_year' => 2024,
             'badge'        => BadgeType::Dubbed->value,
             'type'         => MovieType::Movie->value,
@@ -132,7 +132,7 @@ final class MovieFeatureTest extends TestCase
 
         $response->assertCreated();
 
-        $movie = Movie::where('title', 'Upload Test')->first();
+        $movie = Movie::where('title->en', 'Upload Test')->first();
         $this->assertNotNull($movie->poster);
 
         Storage::disk(config('movie.upload.disk', 'public'))
@@ -144,7 +144,7 @@ final class MovieFeatureTest extends TestCase
         Storage::fake(config('movie.upload.disk', 'public'));
 
         $payload = [
-            'title'        => 'Precedence Test',
+            'title'        => ['en' => 'Precedence Test'],
             'release_year' => 2024,
             'badge'        => BadgeType::Dubbed->value,
             'type'         => MovieType::Movie->value,
@@ -157,7 +157,7 @@ final class MovieFeatureTest extends TestCase
 
         $response->assertCreated();
 
-        $movie = Movie::where('title', 'Precedence Test')->first();
+        $movie = Movie::where('title->en', 'Precedence Test')->first();
         $this->assertNotEquals('https://example.com/ignored.jpg', $movie->poster);
     }
 
@@ -257,7 +257,7 @@ final class MovieFeatureTest extends TestCase
         $movie = Movie::factory()->create();
 
         $payload = [
-            'title'        => 'Updated Title',
+            'title'        => ['en' => 'Updated Title'],
             'release_year' => $movie->release_year,
             'badge'        => $movie->badge->value,
         ];
@@ -268,13 +268,13 @@ final class MovieFeatureTest extends TestCase
         $response->assertOk()
             ->assertJsonFragment(['title' => 'Updated Title']);
 
-        $this->assertDatabaseHas('movies', ['id' => $movie->id, 'title' => 'Updated Title']);
+        $this->assertDatabaseHas('movies', ['id' => $movie->id, 'title->en' => 'Updated Title']);
     }
 
     public function test_update_movie_returns_404_when_not_found(): void
     {
         $payload = [
-            'title'        => 'Updated',
+            'title'        => ['en' => 'Updated'],
             'release_year' => 2020,
             'badge'        => BadgeType::Dubbed->value,
         ];

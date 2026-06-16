@@ -244,7 +244,7 @@ class ArticleFeatureTest extends TestCase
     {
         $paginator = $this->makePaginator([$this->makeArticle()]);
 
-        $this->service->shouldReceive('paginate')->once()->with(15)->andReturn($paginator);
+        $this->service->shouldReceive('adminFilter')->once()->andReturn($paginator);
 
         $this->asAdmin()
             ->getJson('/api/v1/admin/articles')
@@ -255,7 +255,7 @@ class ArticleFeatureTest extends TestCase
 
     public function test_index_passes_per_page_to_service(): void
     {
-        $this->service->shouldReceive('paginate')->once()->with(10)->andReturn($this->makePaginator());
+        $this->service->shouldReceive('adminFilter')->once()->andReturn($this->makePaginator());
 
         $this->asAdmin()->getJson('/api/v1/admin/articles?per_page=10')->assertOk();
     }

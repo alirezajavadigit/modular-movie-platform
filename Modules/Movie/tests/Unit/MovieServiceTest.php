@@ -52,8 +52,8 @@ final class MovieServiceTest extends TestCase
     public function test_create_movie_returns_movie(): void
     {
         $dto = new CreateMovieDTO(
-            title: 'The Matrix',
-            description: 'A sci-fi classic',
+            title: ['en' => 'The Matrix'],
+            description: ['en' => 'A sci-fi classic'],
             poster: null,
             trailerUrl: null,
             downloadLinks: null,
@@ -76,8 +76,8 @@ final class MovieServiceTest extends TestCase
         $movie = Movie::factory()->create();
 
         $dto = new UpdateMovieDTO(
-            title: 'Updated Title',
-            description: $movie->description,
+            title: ['en' => 'Updated Title'],
+            description: $movie->getTranslations('description'),
             poster: $movie->poster,
             trailerUrl: $movie->trailer_url,
             downloadLinks: $movie->download_links,
@@ -98,7 +98,7 @@ final class MovieServiceTest extends TestCase
         $this->expectException(ModelNotFoundException::class);
 
         $dto = new UpdateMovieDTO(
-            title: 'Title',
+            title: ['en' => 'Title'],
             description: null,
             poster: null,
             trailerUrl: null,
