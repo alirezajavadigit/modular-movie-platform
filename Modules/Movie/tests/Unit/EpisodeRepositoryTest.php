@@ -83,8 +83,8 @@ final class EpisodeRepositoryTest extends TestCase
             movieId: $serial->id,
             seasonNumber: 1,
             episodeNumber: 1,
-            title: 'Pilot',
-            description: 'The first episode',
+            title: ['en' => 'Pilot'],
+            description: ['en' => 'The first episode'],
             poster: null,
             trailerUrl: null,
             downloadLinks: ['https://example.com/ep1'],
@@ -95,7 +95,7 @@ final class EpisodeRepositoryTest extends TestCase
         $this->assertInstanceOf(Episode::class, $result);
         $this->assertEquals('Pilot', $result->title);
         $this->assertEquals($serial->id, $result->movie_id);
-        $this->assertDatabaseHas('episodes', ['title' => 'Pilot', 'movie_id' => $serial->id]);
+        $this->assertDatabaseHas('episodes', ['title->en' => 'Pilot', 'movie_id' => $serial->id]);
     }
 
     public function test_update_returns_updated_episode(): void
@@ -105,8 +105,8 @@ final class EpisodeRepositoryTest extends TestCase
         $dto = new UpdateEpisodeDTO(
             seasonNumber: $episode->season_number,
             episodeNumber: $episode->episode_number,
-            title: 'New Title',
-            description: $episode->description,
+            title: ['en' => 'New Title'],
+            description: $episode->getTranslations('description'),
             poster: $episode->poster,
             trailerUrl: $episode->trailer_url,
             downloadLinks: $episode->download_links,
@@ -115,7 +115,7 @@ final class EpisodeRepositoryTest extends TestCase
         $result = $this->repository->update($episode->id, $dto);
 
         $this->assertEquals('New Title', $result->title);
-        $this->assertDatabaseHas('episodes', ['id' => $episode->id, 'title' => 'New Title']);
+        $this->assertDatabaseHas('episodes', ['id' => $episode->id, 'title->en' => 'New Title']);
     }
 
     public function test_delete_soft_deletes_episode(): void

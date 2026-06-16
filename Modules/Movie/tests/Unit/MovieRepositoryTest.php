@@ -59,8 +59,8 @@ final class MovieRepositoryTest extends TestCase
     public function test_create_returns_movie(): void
     {
         $dto = new CreateMovieDTO(
-            title: 'Inception',
-            description: 'A mind-bending thriller',
+            title: ['en' => 'Inception'],
+            description: ['en' => 'A mind-bending thriller'],
             poster: 'https://example.com/poster.jpg',
             trailerUrl: 'https://example.com/trailer.mp4',
             downloadLinks: ['https://example.com/dl1'],
@@ -77,7 +77,7 @@ final class MovieRepositoryTest extends TestCase
         $this->assertInstanceOf(Movie::class, $result);
         $this->assertEquals('Inception', $result->title);
         $this->assertEquals(MovieType::Movie, $result->type);
-        $this->assertDatabaseHas('movies', ['title' => 'Inception']);
+        $this->assertDatabaseHas('movies', ['title->en' => 'Inception']);
     }
 
     public function test_update_returns_updated_movie(): void
@@ -85,8 +85,8 @@ final class MovieRepositoryTest extends TestCase
         $movie = Movie::factory()->create(['title' => 'Old Title']);
 
         $dto = new UpdateMovieDTO(
-            title: 'New Title',
-            description: $movie->description,
+            title: ['en' => 'New Title'],
+            description: $movie->getTranslations('description'),
             poster: $movie->poster,
             trailerUrl: $movie->trailer_url,
             downloadLinks: $movie->download_links,
@@ -100,7 +100,7 @@ final class MovieRepositoryTest extends TestCase
         $result = $this->repository->update($movie->id, $dto);
 
         $this->assertEquals('New Title', $result->title);
-        $this->assertDatabaseHas('movies', ['id' => $movie->id, 'title' => 'New Title']);
+        $this->assertDatabaseHas('movies', ['id' => $movie->id, 'title->en' => 'New Title']);
     }
 
     public function test_delete_soft_deletes_movie(): void
