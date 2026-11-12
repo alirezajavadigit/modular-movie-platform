@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Modules\Payment\Tests\Support;
 
 use GuzzleHttp\Psr7\HttpFactory;
+use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Testing\TestResponse;
 use Modules\Auth\Models\User;
 use Modules\Authorization\Models\Permission;
@@ -23,7 +25,7 @@ trait InteractsWithPaymentGateways
 
     protected FakeHttpGateways $http;
 
-    protected array $observed = ['succeeded' => [], 'failed' => [], 'activated' => []];
+    protected array $observed = ['succeeded' => [], 'failed' => [], 'activated' => [], 'logs' => []];
 
     protected function setUpPaymentGateways(): void
     {
@@ -56,6 +58,11 @@ trait InteractsWithPaymentGateways
 
         $this->http = new FakeHttpGateways();
         $this->http->register();
+
+        Log::setDefaultDriver('null');
+        $this->app['events']->listen(MessageLogged::class, function (MessageLogged $log) {
+            $this->observed['logs'][] = ['level' => $log->level, 'message' => $log->message, 'context' => $log->context];
+        });
 
         $this->app['events']->listen(PaymentSucceeded::class, function (PaymentSucceeded $event) {
             $this->observed['succeeded'][] = $event->payment->id;
@@ -157,6 +164,23 @@ trait InteractsWithPaymentGateways
     protected function failedEventsFor(Payment $payment): int
     {
         return count(array_keys($this->observed['failed'], $payment->id, true));
+    }
+
+    protected function logsFor(Payment $payment, ?string $level = null): array
+    {
+        return array_values(array_filter(
+            $this->observed['logs'],
+            fn (array $log) => ($log['context']['payment_id'] ?? null) === $payment->id && ($level === null || $log['level'] === $level),
+        ));
+    }
+
+    protected function assertLogsAreSanitized(): void
+    {
+        $logs = json_encode($this->observed['logs'], JSON_UNESCAPED_UNICODE);
+
+        foreach (['paypal-secret', 'paypal-client', 'paypal-test-token', 'sk_test_fake', '11111111-2222-3333-4444-555555555555', 'PAYER123'] as $secret) {
+            $this->assertStringNotContainsString($secret, $logs);
+        }
     }
 
     protected function activationsOf(int $subscriptionId): int

@@ -21,6 +21,11 @@ final class SubscriptionRepository implements SubscriptionRepositoryInterface
         return $this->model->newQuery()->find($id);
     }
 
+    public function findForUpdate(int $id): ?Subscription
+    {
+        return $this->model->newQuery()->whereKey($id)->lockForUpdate()->first();
+    }
+
     public function getAll(): Collection
     {
         return $this->model->newQuery()->latest()->get();

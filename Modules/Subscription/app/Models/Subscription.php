@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\Auth\Models\User;
 use Modules\Payment\Contracts\PayableInterface;
 use Modules\Payment\Enums\PaymentStatus;
@@ -61,30 +63,64 @@ class Subscription extends Model implements PayableInterface
 
     public function activate(int $paymentId): void
     {
-        if ($this->status === SubscriptionStatus::ACTIVE) {
-            return;
-        }
+        DB::transaction(function () use ($paymentId): void {
+            $current = $this->lockedForUpdate();
 
-        $startsAt = now();
+            if ($current->status === SubscriptionStatus::ACTIVE) {
+                if ($current->payment_id !== $paymentId) {
+                    Log::error('A successful payment arrived for an already active subscription; manual financial reconciliation may be required.', [
+                        'subscription_id'   => $current->id,
+                        'payment_id'        => $paymentId,
+                        'active_payment_id' => $current->payment_id,
+                    ]);
+                }
 
-        $this->update([
-            'payment_id' => $paymentId,
-            'status'     => SubscriptionStatus::ACTIVE,
-            'starts_at'  => $startsAt,
-            'ends_at'    => $startsAt->copy()->addDays((int) $this->plan->duration_days),
-        ]);
+                $this->syncFrom($current);
+
+                return;
+            }
+
+            $startsAt = now();
+
+            $current->update([
+                'payment_id' => $paymentId,
+                'status'     => SubscriptionStatus::ACTIVE,
+                'starts_at'  => $startsAt,
+                'ends_at'    => $startsAt->copy()->addDays((int) $current->plan->duration_days),
+            ]);
+
+            $this->syncFrom($current);
+        });
     }
 
     public function markPaymentFailed(int $paymentId): void
     {
-        if ($this->status === SubscriptionStatus::ACTIVE || $this->hasOtherOpenPayment($paymentId)) {
-            return;
-        }
+        DB::transaction(function () use ($paymentId): void {
+            $current = $this->lockedForUpdate();
 
-        $this->update([
-            'payment_id' => $paymentId,
-            'status'     => SubscriptionStatus::CANCELED,
-        ]);
+            if ($current->status === SubscriptionStatus::ACTIVE || $current->hasOtherOpenPayment($paymentId)) {
+                $this->syncFrom($current);
+
+                return;
+            }
+
+            $current->update([
+                'payment_id' => $paymentId,
+                'status'     => SubscriptionStatus::CANCELED,
+            ]);
+
+            $this->syncFrom($current);
+        });
+    }
+
+    private function lockedForUpdate(): self
+    {
+        return static::query()->whereKey($this->getKey())->lockForUpdate()->firstOrFail();
+    }
+
+    private function syncFrom(self $current): void
+    {
+        $this->setRawAttributes($current->getAttributes(), true);
     }
 
     private function hasOtherOpenPayment(int $paymentId): bool

@@ -112,7 +112,7 @@ final class PaymentCallbackReliabilityTest extends TestCase
         $this->assertSame(1, $this->failedEventsFor($payment));
     }
 
-    public function test_paypal_declined_instrument_fails_the_payment(): void
+    public function test_paypal_declined_instrument_waits_for_the_payer_instead_of_failing(): void
     {
         $owner = $this->customer();
         $payment = $this->subscribe($owner, $this->plan(19.99), 'paypal');
@@ -120,8 +120,9 @@ final class PaymentCallbackReliabilityTest extends TestCase
 
         $this->successCallback($payment)->assertOk();
 
-        $this->assertSame(PaymentStatus::FAILED, $payment->fresh()->status);
-        $this->assertSame(1, $this->failedEventsFor($payment));
+        $this->assertSame(PaymentStatus::PENDING, $payment->fresh()->status);
+        $this->assertSame(SubscriptionStatus::PENDING, $payment->payable->fresh()->status);
+        $this->assertSame(0, $this->failedEventsFor($payment));
     }
 
     public function test_paypal_completed_order_with_declined_capture_fails_the_payment(): void
@@ -160,7 +161,7 @@ final class PaymentCallbackReliabilityTest extends TestCase
         $this->assertSame(1, $this->succeededEventsFor($payment));
     }
 
-    public function test_zibal_invalid_track_rejection_fails_the_payment(): void
+    public function test_zibal_invalid_track_keeps_the_payment_unresolved(): void
     {
         $owner = $this->customer();
         $payment = $this->subscribe($owner, $this->plan(), 'zibal');
@@ -168,7 +169,8 @@ final class PaymentCallbackReliabilityTest extends TestCase
 
         $this->successCallback($payment)->assertOk();
 
-        $this->assertSame(PaymentStatus::FAILED, $payment->fresh()->status);
+        $this->assertSame(PaymentStatus::PENDING, $payment->fresh()->status);
+        $this->assertSame(0, $this->failedEventsFor($payment));
     }
 
     public function test_zibal_already_verified_track_settles_the_payment(): void

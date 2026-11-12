@@ -20,6 +20,8 @@ final class FakeHttpGateways
 
     private int|string|null $failure = null;
 
+    private array $routeFailures = [];
+
     private int $sequence = 0;
 
     public function register(): void
@@ -31,6 +33,11 @@ final class FakeHttpGateways
     public function failWith(int|string|null $failure): void
     {
         $this->failure = $failure;
+    }
+
+    public function failRoute(string $method, string $needle, int|string $failure): void
+    {
+        $this->routeFailures[] = [$method, $needle, $failure];
     }
 
     public function callsTo(string $needle): int
@@ -60,6 +67,16 @@ final class FakeHttpGateways
         $this->paypalOrders[$orderId]['capture_issue'] = $captureIssue;
     }
 
+    public function voidPayPal(string $orderId): void
+    {
+        $this->paypalOrders[$orderId]['status'] = 'VOIDED';
+    }
+
+    public function forgetPayPal(string $orderId): void
+    {
+        unset($this->paypalOrders[$orderId]);
+    }
+
     public function payZibal(string $trackId): void
     {
         $this->zibalTracks[$trackId]['paid'] = true;
@@ -75,12 +92,20 @@ final class FakeHttpGateways
         $url = $request->url();
         $this->calls[] = $request->method() . ' ' . $url;
 
-        if ($this->failure === 'timeout') {
+        $failure = $this->failure;
+
+        foreach ($this->routeFailures as [$method, $needle, $routeFailure]) {
+            if ($request->method() === $method && str_contains($url, $needle)) {
+                $failure = $routeFailure;
+            }
+        }
+
+        if ($failure === 'timeout') {
             throw new ConnectionException('cURL error 28: Operation timed out after 30001 milliseconds');
         }
 
-        if (is_int($this->failure)) {
-            return Http::response(['error' => 'gateway error'], $this->failure);
+        if (is_int($failure)) {
+            return Http::response(['error' => 'gateway error', 'debug_id' => 'f00dfeed1234'], $failure);
         }
 
         return match (true) {
@@ -190,7 +215,8 @@ final class FakeHttpGateways
         return Http::response([
             'name'    => 'UNPROCESSABLE_ENTITY',
             'details' => [['issue' => $issue]],
-            'message' => 'The requested action could not be performed, semantically incorrect, or failed business validation.',
+            'message'  => 'The requested action could not be performed, semantically incorrect, or failed business validation.',
+            'debug_id' => 'abc123def456',
         ], 422);
     }
 
