@@ -8,6 +8,7 @@ use Modules\Payment\DTOs\CreatePaymentDTO;
 use Modules\Payment\DTOs\PurchaseResultDTO;
 use RuntimeException;
 use Throwable;
+use ZarinPal\Sdk\ClientBuilder;
 use ZarinPal\Sdk\Endpoint\PaymentGateway\PaymentGateway;
 use ZarinPal\Sdk\Endpoint\PaymentGateway\RequestTypes\RequestRequest;
 use ZarinPal\Sdk\Endpoint\PaymentGateway\RequestTypes\VerifyRequest;
@@ -19,11 +20,12 @@ final class ZarinPalGateway implements GatewayInterface
 {
     private PaymentGateway $paymentGateway;
 
-    public function __construct()
+    public function __construct(?ClientBuilder $clientBuilder = null)
     {
         $options = new Options([
             'merchant_id' => config('payment-module.gateways.zarinpal.merchant_id', ''),
             'sandbox' => (bool) config('payment-module.gateways.zarinpal.sandbox', false),
+            'client_builder' => $clientBuilder ?? new ClientBuilder(),
         ]);
 
         $this->paymentGateway = (new ZarinPal($options))->paymentGateway();
