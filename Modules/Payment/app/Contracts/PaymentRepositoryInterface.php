@@ -12,6 +12,7 @@ interface PaymentRepositoryInterface
 {
     public function findById(int $id): ?Payment;
     public function findByTransactionId(string $transactionId): ?Payment;
+    public function findForUpdate(int $id): ?Payment;
     public function getAll(): Collection;
     public function getAllRelatedToUser(int $userId): Collection;
     public function paginate(int $perPage = 15): LengthAwarePaginator;

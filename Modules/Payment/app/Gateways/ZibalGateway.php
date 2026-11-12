@@ -2,14 +2,20 @@
 
 namespace Modules\Payment\Gateways;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Modules\Payment\Contracts\GatewayInterface;
 use Modules\Payment\DTOs\CreatePaymentDTO;
 use Modules\Payment\DTOs\PurchaseResultDTO;
+use Modules\Payment\Exceptions\PaymentNotSettledException;
 use RuntimeException;
 
 final class ZibalGateway implements GatewayInterface
 {
+    private const VERIFIED_RESULTS = [100, 201];
+
+    private const DECLINED_RESULTS = [203];
+
     private string $merchant;
     private string $callbackUrl;
     private string $requestEndpoint = 'https://gateway.zibal.ir/v1/request';
@@ -42,13 +48,25 @@ final class ZibalGateway implements GatewayInterface
 
     public function verify(string $transactionId, float $amount = 0.0): bool
     {
-        $response = Http::post($this->verifyEndpoint, [
-            'merchant' => $this->merchant,
-            'trackId'  => $transactionId,
-        ]);
+        try {
+            $response = Http::post($this->verifyEndpoint, [
+                'merchant' => $this->merchant,
+                'trackId'  => $transactionId,
+            ]);
+        } catch (ConnectionException $e) {
+            throw new PaymentNotSettledException('Zibal is unreachable.', previous: $e);
+        }
 
-        $data = $response->json();
+        if ($response->failed()) {
+            throw new PaymentNotSettledException("Zibal verify did not return a final result [{$response->status()}].");
+        }
 
-        return ($data['result'] ?? null) === 100;
+        $result = $response->json('result');
+
+        return match (true) {
+            in_array($result, self::VERIFIED_RESULTS, true) => true,
+            in_array($result, self::DECLINED_RESULTS, true) => false,
+            default => throw new PaymentNotSettledException("Zibal verify returned a non-final result [{$result}]."),
+        };
     }
 }

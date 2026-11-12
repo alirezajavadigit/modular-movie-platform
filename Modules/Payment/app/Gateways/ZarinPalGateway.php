@@ -12,6 +12,7 @@ use RuntimeException;
 use Throwable;
 use ZarinPal\Sdk\ClientBuilder;
 use ZarinPal\Sdk\Endpoint\PaymentGateway\PaymentGateway;
+use ZarinPal\Sdk\Endpoint\PaymentGateway\RequestTypes\InquiryRequest;
 use ZarinPal\Sdk\Endpoint\PaymentGateway\RequestTypes\RequestRequest;
 use ZarinPal\Sdk\Endpoint\PaymentGateway\RequestTypes\VerifyRequest;
 use ZarinPal\Sdk\HttpClient\Exception\ResponseException;
@@ -20,7 +21,11 @@ use ZarinPal\Sdk\ZarinPal;
 
 final class ZarinPalGateway implements GatewayInterface
 {
-    private const DECLINED_VERIFY_CODES = [-50, -51, -53, -54];
+    private const DECLINED_VERIFY_CODES = [-50, -53, -54];
+
+    private const NOT_PAID_CODE = -51;
+
+    private const FINAL_UNPAID_STATUSES = ['FAILED', 'REVERSED'];
 
     private PaymentGateway $paymentGateway;
 
@@ -83,6 +88,10 @@ final class ZarinPalGateway implements GatewayInterface
         } catch (InvalidArgumentException) {
             return false;
         } catch (ResponseException $e) {
+            if ($e->getCode() === self::NOT_PAID_CODE) {
+                return $this->declinedUnlessStillOpen($transactionId, $e);
+            }
+
             if (in_array($e->getCode(), self::DECLINED_VERIFY_CODES, true)) {
                 return false;
             }
@@ -93,6 +102,24 @@ final class ZarinPalGateway implements GatewayInterface
         }
 
         return in_array($response->code, [100, 101], true);
+    }
+
+    private function declinedUnlessStillOpen(string $authority, ResponseException $verifyError): bool
+    {
+        $request = new InquiryRequest();
+        $request->authority = $authority;
+
+        try {
+            $status = $this->paymentGateway->inquiry($request)->status ?? null;
+        } catch (Throwable $e) {
+            throw new PaymentNotSettledException('ZarinPal inquiry is unavailable.', previous: $e);
+        }
+
+        if (in_array($status, self::FINAL_UNPAID_STATUSES, true)) {
+            return false;
+        }
+
+        throw new PaymentNotSettledException("ZarinPal session is not final yet [{$status}].", previous: $verifyError);
     }
 
     private function resolveCallbackUrl(): string

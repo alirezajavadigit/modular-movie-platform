@@ -2,14 +2,24 @@
 
 namespace Modules\Payment\Gateways;
 
+use Closure;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Modules\Payment\Contracts\GatewayInterface;
 use Modules\Payment\DTOs\CreatePaymentDTO;
 use Modules\Payment\DTOs\PurchaseResultDTO;
+use Modules\Payment\Exceptions\PaymentNotSettledException;
 use RuntimeException;
 
 final class PayPalGateway implements GatewayInterface
 {
+    private const RETRYABLE_STATUSES = [401, 403, 408, 429];
+
+    private const NOT_YET_PAYABLE_ISSUES = ['ORDER_NOT_APPROVED', 'PAYER_ACTION_REQUIRED'];
+
+    private const DECLINED_CAPTURE_STATUSES = ['DECLINED', 'FAILED'];
+
     private string $clientId;
     private string $clientSecret;
     private string $callbackUrl;
@@ -66,14 +76,65 @@ final class PayPalGateway implements GatewayInterface
 
     public function verify(string $transactionId, float $amount = 0.0): bool
     {
-        $token = $this->getAccessToken();
+        $orderUrl = "{$this->baseUrl}/v2/checkout/orders/" . rawurlencode($transactionId);
 
-        $response = Http::withToken($token)
-            ->post("{$this->baseUrl}/v2/checkout/orders/{$transactionId}/capture");
+        $response = $this->send(fn (string $token): Response => Http::withToken($token)
+            ->withHeaders(['PayPal-Request-Id' => "capture-{$transactionId}"])
+            ->post("{$orderUrl}/capture"));
 
-        $data = $response->json();
+        if ($response->status() === 404) {
+            return false;
+        }
 
-        return ($data['status'] ?? null) === 'COMPLETED';
+        if ($response->status() === 422) {
+            $issue = $response->json('details.0.issue');
+
+            if ($issue === 'ORDER_ALREADY_CAPTURED') {
+                return $this->captureCompleted($this->send(fn (string $token): Response => Http::withToken($token)->get($orderUrl))->json());
+            }
+
+            if (in_array($issue, self::NOT_YET_PAYABLE_ISSUES, true)) {
+                throw new PaymentNotSettledException("The PayPal order is not payable yet [{$issue}].");
+            }
+
+            return false;
+        }
+
+        if ($response->failed()) {
+            throw new PaymentNotSettledException("PayPal capture did not return a final result [{$response->status()}].");
+        }
+
+        return $this->captureCompleted($response->json());
+    }
+
+    private function captureCompleted(?array $order): bool
+    {
+        $status = $order['purchase_units'][0]['payments']['captures'][0]['status'] ?? null;
+
+        if ($status === 'COMPLETED') {
+            return true;
+        }
+
+        if (in_array($status, self::DECLINED_CAPTURE_STATUSES, true)) {
+            return false;
+        }
+
+        throw new PaymentNotSettledException("The PayPal capture is not final yet [{$status}].");
+    }
+
+    private function send(Closure $request): Response
+    {
+        try {
+            $response = $request($this->getAccessToken());
+        } catch (ConnectionException|RuntimeException $e) {
+            throw new PaymentNotSettledException('PayPal is unavailable.', previous: $e);
+        }
+
+        if ($response->serverError() || in_array($response->status(), self::RETRYABLE_STATUSES, true)) {
+            throw new PaymentNotSettledException("PayPal did not return a final result [{$response->status()}].");
+        }
+
+        return $response;
     }
 
     private function getAccessToken(): string

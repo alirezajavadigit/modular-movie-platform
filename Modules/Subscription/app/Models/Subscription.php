@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Auth\Models\User;
 use Modules\Payment\Contracts\PayableInterface;
+use Modules\Payment\Enums\PaymentStatus;
 use Modules\Payment\Models\Payment;
 use Modules\Subscription\Database\Factories\SubscriptionFactory;
 use Modules\Subscription\Enums\SubscriptionStatus;
@@ -76,7 +77,7 @@ class Subscription extends Model implements PayableInterface
 
     public function markPaymentFailed(int $paymentId): void
     {
-        if ($this->status === SubscriptionStatus::ACTIVE) {
+        if ($this->status === SubscriptionStatus::ACTIVE || $this->hasOtherOpenPayment($paymentId)) {
             return;
         }
 
@@ -84,6 +85,16 @@ class Subscription extends Model implements PayableInterface
             'payment_id' => $paymentId,
             'status'     => SubscriptionStatus::CANCELED,
         ]);
+    }
+
+    private function hasOtherOpenPayment(int $paymentId): bool
+    {
+        return Payment::query()
+            ->whereIn('payable_type', array_unique([static::class, $this->getMorphClass()]))
+            ->where('payable_id', $this->getKey())
+            ->whereKeyNot($paymentId)
+            ->whereIn('status', [PaymentStatus::PENDING->value, PaymentStatus::SUCCESS->value])
+            ->exists();
     }
 
     public function getPayableId(): int|string

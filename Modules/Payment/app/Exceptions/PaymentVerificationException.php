@@ -37,6 +37,11 @@ final class PaymentVerificationException extends RuntimeException
         return new self(__('payment::messages.not_settled'), Response::HTTP_CONFLICT);
     }
 
+    public static function callbackNotFound(): self
+    {
+        return new self(__('payment::messages.callback_not_found'), Response::HTTP_NOT_FOUND);
+    }
+
     public function getStatusCode(): int
     {
         return $this->statusCode;

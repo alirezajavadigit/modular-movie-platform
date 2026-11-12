@@ -105,41 +105,21 @@ final class PaymentService implements PaymentServiceInterface
             throw PaymentVerificationException::notConfirmed();
         }
 
-        $payment = DB::transaction(fn (): Payment => $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
-            paymentId: $payment->id,
-            status: PaymentStatus::SUCCESS,
-            transactionId: $transactionId,
-        )));
-
-        $this->dispatchOutcome($payment);
-
-        return $payment;
+        return $this->settle($payment, PaymentStatus::SUCCESS);
     }
 
     public function callback(string $driver, array $payload): Payment
     {
-        [$reference, $canceled] = $this->resolveCallback($driver, $payload);
+        [$reference, $cancellationRequested] = $this->resolveCallback($driver, $payload);
 
-        if ($reference === '') {
-            throw new InvalidArgumentException('Missing payment reference in callback.');
-        }
-
-        $payment = $this->repository->findByTransactionId($reference);
+        $payment = $reference === '' ? null : $this->repository->findByTransactionId($reference);
 
         if (!$payment || $payment->driver !== $driver) {
-            throw new InvalidArgumentException('No matching payment found for this callback.');
+            throw PaymentVerificationException::callbackNotFound();
         }
 
         if (!$payment->status->isPending()) {
             return $payment;
-        }
-
-        if ($canceled) {
-            return $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
-                paymentId: $payment->id,
-                status: PaymentStatus::CANCELED,
-                transactionId: $reference,
-            ));
         }
 
         try {
@@ -148,15 +128,11 @@ final class PaymentService implements PaymentServiceInterface
             return $payment;
         }
 
-        $payment = DB::transaction(fn (): Payment => $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
-            paymentId: $payment->id,
-            status: $verified ? PaymentStatus::SUCCESS : PaymentStatus::FAILED,
-            transactionId: $reference,
-        )));
-
-        $this->dispatchOutcome($payment);
-
-        return $payment;
+        return $this->settle($payment, match (true) {
+            $verified              => PaymentStatus::SUCCESS,
+            $cancellationRequested => PaymentStatus::CANCELED,
+            default                => PaymentStatus::FAILED,
+        });
     }
 
     public function delete(int $id): bool
@@ -201,6 +177,27 @@ final class PaymentService implements PaymentServiceInterface
         return $this->repository->getTrashed($perPage);
     }
 
+    private function settle(Payment $payment, PaymentStatus $status): Payment
+    {
+        return DB::transaction(function () use ($payment, $status): Payment {
+            $current = $this->repository->findForUpdate($payment->id);
+
+            if (!$current || !$current->status->isPending()) {
+                return $current ?? $payment;
+            }
+
+            $settled = $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
+                paymentId: $current->id,
+                status: $status,
+                transactionId: $current->transaction_id,
+            ));
+
+            $this->dispatchOutcome($settled);
+
+            return $settled;
+        });
+    }
+
     private function dispatchOutcome(Payment $payment): void
     {
         if ($payment->status->isSuccess()) {
@@ -221,7 +218,7 @@ final class PaymentService implements PaymentServiceInterface
             'paypal'   => [(string) ($payload['token'] ?? ''), !isset($payload['PayerID'])],
             'zarinpal' => [(string) ($payload['Authority'] ?? ''), ($payload['Status'] ?? null) !== 'OK'],
             'zibal'    => [(string) ($payload['trackId'] ?? ''), (string) ($payload['success'] ?? '') !== '1'],
-            default    => throw new InvalidArgumentException("Unsupported callback driver: {$driver}"),
+            default    => throw PaymentVerificationException::callbackNotFound(),
         };
     }
 
