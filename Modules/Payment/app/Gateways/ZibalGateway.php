@@ -14,7 +14,9 @@ final class ZibalGateway implements GatewayInterface
 {
     private const VERIFIED_RESULTS = [100, 201];
 
-    private const DECLINED_RESULTS = [203];
+    private const INVALID_TRACK_RESULT = 203;
+
+    private const MERCHANT_RESULTS = [102, 103, 104];
 
     private string $merchant;
     private string $callbackUrl;
@@ -54,19 +56,21 @@ final class ZibalGateway implements GatewayInterface
                 'trackId'  => $transactionId,
             ]);
         } catch (ConnectionException $e) {
-            throw new PaymentNotSettledException('Zibal is unreachable.', previous: $e);
+            throw PaymentNotSettledException::temporary('Zibal is unreachable.', previous: $e);
         }
 
         if ($response->failed()) {
-            throw new PaymentNotSettledException("Zibal verify did not return a final result [{$response->status()}].");
+            throw PaymentNotSettledException::temporary('Zibal verify did not return a final result.', ['http_status' => $response->status()]);
         }
 
         $result = $response->json('result');
+        $context = ['gateway_result' => is_int($result) ? $result : null];
 
         return match (true) {
             in_array($result, self::VERIFIED_RESULTS, true) => true,
-            in_array($result, self::DECLINED_RESULTS, true) => false,
-            default => throw new PaymentNotSettledException("Zibal verify returned a non-final result [{$result}]."),
+            $result === self::INVALID_TRACK_RESULT           => throw PaymentNotSettledException::needsReview('Zibal reported the stored trackId as invalid.', $context),
+            in_array($result, self::MERCHANT_RESULTS, true)  => throw PaymentNotSettledException::needsReview('Zibal rejected the merchant configuration.', $context),
+            default                                          => throw PaymentNotSettledException::temporary('Zibal verify returned a non-final result.', $context),
         };
     }
 }

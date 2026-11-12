@@ -5,6 +5,7 @@ namespace Modules\Payment\Services;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use LogicException;
 use Modules\Payment\Contracts\GatewayInterface;
@@ -97,8 +98,12 @@ final class PaymentService implements PaymentServiceInterface
 
         try {
             $verified = $this->resolveGateway($payment->driver)->verify($transactionId, (float) $payment->amount);
-        } catch (PaymentNotSettledException) {
-            throw PaymentVerificationException::notSettled();
+        } catch (PaymentNotSettledException $e) {
+            $this->reportUnresolved($payment, $e);
+
+            throw $e->requiresPayerAction()
+                ? PaymentVerificationException::payerActionRequired()
+                : PaymentVerificationException::notSettled();
         }
 
         if (!$verified) {
@@ -124,7 +129,9 @@ final class PaymentService implements PaymentServiceInterface
 
         try {
             $verified = $this->resolveGateway($driver)->verify($reference, (float) $payment->amount);
-        } catch (PaymentNotSettledException) {
+        } catch (PaymentNotSettledException $e) {
+            $this->reportUnresolved($payment, $e);
+
             return $payment;
         }
 
@@ -196,6 +203,22 @@ final class PaymentService implements PaymentServiceInterface
 
             return $settled;
         });
+    }
+
+    private function reportUnresolved(Payment $payment, PaymentNotSettledException $exception): void
+    {
+        $context = [
+            'payment_id' => $payment->id,
+            'driver'     => $payment->driver,
+            'reason'     => $exception->reason,
+            'detail'     => $exception->getMessage(),
+        ] + $exception->context;
+
+        match ($exception->reason) {
+            PaymentNotSettledException::REVIEW       => Log::error('Payment left unresolved; it needs review before it can be settled.', $context),
+            PaymentNotSettledException::PAYER_ACTION => Log::info('Payment left unresolved until the payer completes it at the gateway.', $context),
+            default                                  => Log::warning('Payment left unresolved because the gateway gave no final answer.', $context),
+        };
     }
 
     private function dispatchOutcome(Payment $payment): void
