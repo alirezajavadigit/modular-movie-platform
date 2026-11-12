@@ -58,3 +58,71 @@ jobs:
               exit(1);
             }
           '
+
+  postgres:
+    name: PostgreSQL Payment Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: movies_testing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d movies_testing"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: movies_testing
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      CACHE_STORE: array
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_pgsql, pgsql, pcntl, posix, mbstring, xml, ctype, json, bcmath
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
+
+      - name: Copy environment file
+        run: cp .env.example .env
+
+      - name: Generate application key
+        run: php artisan key:generate
+
+      - name: Confirm the tests connect to PostgreSQL 16
+        run: |
+          php artisan db:show --no-ansi | tee db-connection.txt
+          grep -Eq 'PostgreSQL \.+ 16\.' db-connection.txt
+          grep -Eq 'Connection \.+ pgsql' db-connection.txt
+          php -m | grep -qx pcntl
+          php -m | grep -qx pdo_pgsql
+
+      - name: Run Payment and Subscription tests on PostgreSQL
+        run: php artisan test Modules/Payment/tests Modules/Subscription/tests --fail-on-skipped
