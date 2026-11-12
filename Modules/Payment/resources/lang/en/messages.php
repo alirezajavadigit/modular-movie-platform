@@ -11,4 +11,9 @@ return [
     'trashed'      => 'Trashed payments retrieved successfully.',
     'restored'     => 'Payment restored successfully.',
     'verified'     => 'Payment verified successfully.',
+
+    'transaction_mismatch' => 'The transaction does not belong to this payment.',
+    'transaction_missing'  => 'This payment has no gateway transaction to verify.',
+    'not_confirmed'        => 'The payment gateway has not confirmed this payment.',
+    'not_settled'          => 'The payment could not be confirmed right now. Please try again later.',
 ];

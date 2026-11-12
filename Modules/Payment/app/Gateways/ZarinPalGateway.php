@@ -3,9 +3,11 @@
 namespace Modules\Payment\Gateways;
 
 use Illuminate\Support\Facades\Auth;
+use InvalidArgumentException;
 use Modules\Payment\Contracts\GatewayInterface;
 use Modules\Payment\DTOs\CreatePaymentDTO;
 use Modules\Payment\DTOs\PurchaseResultDTO;
+use Modules\Payment\Exceptions\PaymentNotSettledException;
 use RuntimeException;
 use Throwable;
 use ZarinPal\Sdk\ClientBuilder;
@@ -18,6 +20,8 @@ use ZarinPal\Sdk\ZarinPal;
 
 final class ZarinPalGateway implements GatewayInterface
 {
+    private const DECLINED_VERIFY_CODES = [-50, -51, -53, -54];
+
     private PaymentGateway $paymentGateway;
 
     public function __construct(?ClientBuilder $clientBuilder = null)
@@ -76,8 +80,16 @@ final class ZarinPalGateway implements GatewayInterface
 
         try {
             $response = $this->paymentGateway->verify($request);
-        } catch (Throwable) {
+        } catch (InvalidArgumentException) {
             return false;
+        } catch (ResponseException $e) {
+            if (in_array($e->getCode(), self::DECLINED_VERIFY_CODES, true)) {
+                return false;
+            }
+
+            throw new PaymentNotSettledException('ZarinPal verification did not return a final result.', previous: $e);
+        } catch (Throwable $e) {
+            throw new PaymentNotSettledException('ZarinPal verification is unavailable.', previous: $e);
         }
 
         return in_array($response->code, [100, 101], true);
