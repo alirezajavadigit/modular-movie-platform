@@ -104,12 +104,18 @@ final class SubscriptionService implements SubscriptionServiceInterface
         }
 
         return DB::transaction(function () use ($subscription): Subscription {
-            $subscription->load('plan');
+            $current = $this->lockForTransition($subscription);
 
-            return $this->repository->update($subscription, new UpdateSubscriptionDTO(
+            if (!$current->status->isPending()) {
+                throw new LogicException('Only pending subscriptions can be activated.');
+            }
+
+            $current->load('plan');
+
+            return $this->repository->update($current, new UpdateSubscriptionDTO(
                 status:   SubscriptionStatus::ACTIVE,
                 startsAt: now(),
-                endsAt:   now()->addDays($subscription->plan->duration_days),
+                endsAt:   now()->addDays($current->plan->duration_days),
             ));
         });
     }
@@ -124,9 +130,32 @@ final class SubscriptionService implements SubscriptionServiceInterface
             throw new LogicException('Expired subscriptions cannot be canceled.');
         }
 
-        return DB::transaction(fn(): Subscription => $this->repository->update($subscription, new UpdateSubscriptionDTO(
-            status: SubscriptionStatus::CANCELED,
-        )));
+        return DB::transaction(function () use ($subscription): Subscription {
+            $current = $this->lockForTransition($subscription);
+
+            if ($current->status->isCanceled()) {
+                throw new LogicException('Subscription is already canceled.');
+            }
+
+            if ($current->status->isExpired()) {
+                throw new LogicException('Expired subscriptions cannot be canceled.');
+            }
+
+            return $this->repository->update($current, new UpdateSubscriptionDTO(
+                status: SubscriptionStatus::CANCELED,
+            ));
+        });
+    }
+
+    private function lockForTransition(Subscription $subscription): Subscription
+    {
+        $current = $this->repository->findForUpdate($subscription->id);
+
+        if (!$current) {
+            throw new LogicException('The subscription no longer exists.');
+        }
+
+        return $current;
     }
 
     public function delete(Subscription $subscription): bool

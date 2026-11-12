@@ -11,6 +11,7 @@ use Modules\Subscription\Models\Subscription;
 interface SubscriptionRepositoryInterface
 {
     public function findById(int $id): ?Subscription;
+    public function findForUpdate(int $id): ?Subscription;
     public function getAll(): Collection;
     public function getAllForUser(int $userId): Collection;
     public function paginateForUser(int $userId, int $perPage = 15): LengthAwarePaginator;
