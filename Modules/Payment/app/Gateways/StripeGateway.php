@@ -16,6 +16,8 @@ final class StripeGateway implements GatewayInterface
 {
     private const CURRENCY = 'usd';
 
+    private const RETRYABLE_STATUSES = [401, 403, 408, 429];
+
     private string $secretKey;
     private string $callbackUrl;
     private string $cancelUrl;
@@ -59,7 +61,7 @@ final class StripeGateway implements GatewayInterface
             throw new PaymentNotSettledException('Stripe is unreachable.', previous: $e);
         }
 
-        if ($response->serverError() || $response->status() === 429) {
+        if ($response->serverError() || in_array($response->status(), self::RETRYABLE_STATUSES, true)) {
             throw new PaymentNotSettledException('Stripe did not return a final result.');
         }
 

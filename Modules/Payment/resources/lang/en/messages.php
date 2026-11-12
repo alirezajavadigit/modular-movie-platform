@@ -16,4 +16,5 @@ return [
     'transaction_missing'  => 'This payment has no gateway transaction to verify.',
     'not_confirmed'        => 'The payment gateway has not confirmed this payment.',
     'not_settled'          => 'The payment could not be confirmed right now. Please try again later.',
+    'callback_not_found'   => 'No matching payment was found for this callback.',
 ];

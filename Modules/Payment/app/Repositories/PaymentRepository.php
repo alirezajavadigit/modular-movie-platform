@@ -25,6 +25,11 @@ final class PaymentRepository implements PaymentRepositoryInterface
         return $this->model->newQuery()->where('transaction_id', $transactionId)->latest()->first();
     }
 
+    public function findForUpdate(int $id): ?Payment
+    {
+        return $this->model->newQuery()->whereKey($id)->lockForUpdate()->first();
+    }
+
     public function getAll(): Collection
     {
         return $this->model->newQuery()->latest()->get();
