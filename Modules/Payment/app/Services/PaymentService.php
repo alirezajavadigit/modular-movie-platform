@@ -15,6 +15,8 @@ use Modules\Payment\DTOs\UpdatePaymentDTO;
 use Modules\Payment\Enums\PaymentStatus;
 use Modules\Payment\Events\PaymentFailed;
 use Modules\Payment\Events\PaymentSucceeded;
+use Modules\Payment\Exceptions\PaymentNotSettledException;
+use Modules\Payment\Exceptions\PaymentVerificationException;
 use Modules\Payment\Models\Payment;
 
 final class PaymentService implements PaymentServiceInterface
@@ -83,16 +85,31 @@ final class PaymentService implements PaymentServiceInterface
             throw new LogicException('Only pending payments can be verified.');
         }
 
-        $payment = DB::transaction(function () use ($dto, $payment): Payment {
-            $gateway  = $this->resolveGateway($payment->driver);
-            $verified = $gateway->verify($dto->transactionId ?? '', (float) $payment->amount);
+        $transactionId = (string) $payment->transaction_id;
 
-            return $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
-                paymentId: $dto->paymentId,
-                status: $verified ? PaymentStatus::SUCCESS : PaymentStatus::FAILED,
-                transactionId: $dto->transactionId,
-            ));
-        });
+        if ($transactionId === '') {
+            throw PaymentVerificationException::transactionMissing();
+        }
+
+        if ($dto->transactionId !== null && !hash_equals($transactionId, $dto->transactionId)) {
+            throw PaymentVerificationException::transactionMismatch();
+        }
+
+        try {
+            $verified = $this->resolveGateway($payment->driver)->verify($transactionId, (float) $payment->amount);
+        } catch (PaymentNotSettledException) {
+            throw PaymentVerificationException::notSettled();
+        }
+
+        if (!$verified) {
+            throw PaymentVerificationException::notConfirmed();
+        }
+
+        $payment = DB::transaction(fn (): Payment => $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
+            paymentId: $payment->id,
+            status: PaymentStatus::SUCCESS,
+            transactionId: $transactionId,
+        )));
 
         $this->dispatchOutcome($payment);
 
@@ -125,16 +142,17 @@ final class PaymentService implements PaymentServiceInterface
             ));
         }
 
-        $payment = DB::transaction(function () use ($driver, $payment, $reference): Payment {
-            $gateway  = $this->resolveGateway($driver);
-            $verified = $gateway->verify($reference, (float) $payment->amount);
+        try {
+            $verified = $this->resolveGateway($driver)->verify($reference, (float) $payment->amount);
+        } catch (PaymentNotSettledException) {
+            return $payment;
+        }
 
-            return $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
-                paymentId: $payment->id,
-                status: $verified ? PaymentStatus::SUCCESS : PaymentStatus::FAILED,
-                transactionId: $reference,
-            ));
-        });
+        $payment = DB::transaction(fn (): Payment => $this->repository->updatePaymentStatus(new UpdatePaymentDTO(
+            paymentId: $payment->id,
+            status: $verified ? PaymentStatus::SUCCESS : PaymentStatus::FAILED,
+            transactionId: $reference,
+        )));
 
         $this->dispatchOutcome($payment);
 
